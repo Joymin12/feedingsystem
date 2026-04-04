@@ -1,0 +1,20 @@
+{
+  "name": "@hanwoo-tmr/api",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/main.ts",
+    "build": "rimraf dist && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+    "start": "node dist/apps/api/src/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@hanwoo-tmr/contracts": "*",
+    "@hanwoo-tmr/domain": "*",
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/platform-express": "^11.1.6",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  }
+}
