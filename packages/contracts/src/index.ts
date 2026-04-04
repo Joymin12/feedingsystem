@@ -245,7 +245,12 @@ export const formulaItemInputSchema = formulaItemSchema;
 export type FormulaItemInput = z.infer<typeof formulaItemInputSchema>;
 
 export const createFarmProfileSchema = farmProfileSchema.omit({ farm_id: true });
-export const updateFarmProfileSchema = createFarmProfileSchema.partial();
+/**
+ * PUT /farm/profile는 농장 프로필 전체를 갱신하는 흐름으로 취급한다.
+ * preferred_stage를 포함한 핵심 필드는 항상 내려오도록 맞춰 두면
+ * Android/Web 어느 쪽에서도 계약 해석이 흔들리지 않는다.
+ */
+export const updateFarmProfileSchema = createFarmProfileSchema;
 
 export type CreateFarmProfileRequest = z.infer<typeof createFarmProfileSchema>;
 export type UpdateFarmProfileRequest = z.infer<typeof updateFarmProfileSchema>;
