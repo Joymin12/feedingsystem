@@ -1,0 +1,25 @@
+{
+  "name": "hanwoo-tmr-platform",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -c cyan,green \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm run dev -w @hanwoo-tmr/api",
+    "dev:web": "npm run dev -w @hanwoo-tmr/web",
+    "build": "npm run build -w @hanwoo-tmr/contracts && npm run build -w @hanwoo-tmr/domain && npm run build -w @hanwoo-tmr/api && npm run build -w @hanwoo-tmr/web",
+    "typecheck": "npm run typecheck -w @hanwoo-tmr/contracts && npm run typecheck -w @hanwoo-tmr/domain && npm run typecheck -w @hanwoo-tmr/api && npm run typecheck -w @hanwoo-tmr/web"
+  },
+  "devDependencies": {
+    "@types/node": "^24.2.0",
+    "concurrently": "^9.2.1",
+    "rimraf": "^6.0.1",
+    "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.16",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  }
+}
