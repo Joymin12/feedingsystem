@@ -1,0 +1,1183 @@
+openapi: 3.1.0
+info:
+  title: Hanwoo TMR AI Recommendation API
+  version: 1.0.0
+  summary: 한우 농가 전용 TMR 배합 분석 및 추천 서비스 API
+servers:
+  - url: http://localhost:3001
+    description: Local API
+tags:
+  - name: Auth
+  - name: Farm
+  - name: Ingredients
+  - name: Formulas
+  - name: AnalysisRuns
+  - name: RecommendationMemos
+  - name: Reports
+security:
+  - sessionCookie: []
+paths:
+  /v1/auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: 이메일/비밀번호 로그인
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 로그인 성공
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSessionResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: 로그아웃
+      responses:
+        '204':
+          description: 로그아웃 완료
+  /v1/me:
+    get:
+      tags: [Auth]
+      summary: 현재 로그인 사용자 조회
+      responses:
+        '200':
+          description: 사용자 정보
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUserResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /v1/farm/profile:
+    get:
+      tags: [Farm]
+      summary: 현재 사용자의 농장 프로필 조회
+      responses:
+        '200':
+          description: 농장 프로필
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmProfileResponse'
+    put:
+      tags: [Farm]
+      summary: 농장 프로필 수정
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFarmProfileRequest'
+      responses:
+        '200':
+          description: 수정된 농장 프로필
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmProfileResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /v1/farm/members:
+    get:
+      tags: [Farm]
+      summary: 내 농장 멤버 목록 조회
+      responses:
+        '200':
+          description: 멤버 목록
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FarmMember'
+  /v1/farm/members/invite:
+    post:
+      tags: [Farm]
+      summary: 농장 멤버 초대
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteFarmMemberRequest'
+      responses:
+        '201':
+          description: 초대된 멤버
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmMember'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+  /v1/ingredients:
+    get:
+      tags: [Ingredients]
+      summary: 원료 목록 조회
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: category
+          in: query
+          schema:
+            $ref: '#/components/schemas/IngredientCategory'
+      responses:
+        '200':
+          description: 원료 목록
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngredientListResponse'
+  /v1/ingredients/{ingredientId}:
+    get:
+      tags: [Ingredients]
+      summary: 원료 상세 조회
+      parameters:
+        - $ref: '#/components/parameters/IngredientId'
+      responses:
+        '200':
+          description: 원료 상세
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngredientDetail'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /v1/farm/ingredient-settings:
+    get:
+      tags: [Ingredients]
+      summary: 농장별 원료 설정 목록 조회
+      responses:
+        '200':
+          description: 농장별 원료 설정
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FarmIngredientSetting'
+  /v1/farm/ingredient-settings/{ingredientId}:
+    put:
+      tags: [Ingredients]
+      summary: 농장별 원료 설정 수정
+      parameters:
+        - $ref: '#/components/parameters/IngredientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFarmIngredientSettingRequest'
+      responses:
+        '200':
+          description: 수정된 농장별 원료 설정
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmIngredientSetting'
+  /v1/formulas:
+    get:
+      tags: [Formulas]
+      summary: 저장 배합 목록 조회
+      responses:
+        '200':
+          description: 저장 배합 목록
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Formula'
+    post:
+      tags: [Formulas]
+      summary: 저장 배합 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFormulaRequest'
+      responses:
+        '201':
+          description: 생성된 배합
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Formula'
+  /v1/formulas/{formulaId}:
+    get:
+      tags: [Formulas]
+      summary: 저장 배합 상세 조회
+      parameters:
+        - $ref: '#/components/parameters/FormulaId'
+      responses:
+        '200':
+          description: 저장 배합
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Formula'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      tags: [Formulas]
+      summary: 저장 배합 수정
+      parameters:
+        - $ref: '#/components/parameters/FormulaId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFormulaRequest'
+      responses:
+        '200':
+          description: 수정된 배합
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Formula'
+  /v1/analysis-runs:
+    post:
+      tags: [AnalysisRuns]
+      summary: 배합 분석 실행
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AnalysisRunFromFormulaRequest'
+                - $ref: '#/components/schemas/AnalysisRunAdHocRequest'
+              discriminator:
+                propertyName: mode
+                mapping:
+                  formula: '#/components/schemas/AnalysisRunFromFormulaRequest'
+                  adhoc: '#/components/schemas/AnalysisRunAdHocRequest'
+      responses:
+        '201':
+          description: 분석 생성 완료
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisRun'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /v1/analysis-runs/{runId}:
+    get:
+      tags: [AnalysisRuns]
+      summary: 분석 결과 상세 조회
+      parameters:
+        - $ref: '#/components/parameters/RunId'
+      responses:
+        '200':
+          description: 분석 결과
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisRun'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /v1/recommendations/{recommendationId}/memo:
+    post:
+      tags: [RecommendationMemos]
+      summary: 추천 메모 append-only 저장
+      parameters:
+        - $ref: '#/components/parameters/RecommendationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecommendationMemoRequest'
+      responses:
+        '201':
+          description: 저장된 메모
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationMemo'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /v1/recommendation-memos:
+    get:
+      tags: [RecommendationMemos]
+      summary: 추천 메모 최신 이력 조회
+      parameters:
+        - name: analysis_run_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: latest_only
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: 추천 메모 목록
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecommendationMemo'
+  /v1/reports/analysis-runs/{runId}.pdf:
+    get:
+      tags: [Reports]
+      summary: 분석 리포트 PDF 다운로드
+      parameters:
+        - $ref: '#/components/parameters/RunId'
+      responses:
+        '200':
+          description: PDF 파일
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /v1/reports/analysis-runs/{runId}.xlsx:
+    get:
+      tags: [Reports]
+      summary: 분석 리포트 XLSX 다운로드
+      parameters:
+        - $ref: '#/components/parameters/RunId'
+      responses:
+        '200':
+          description: XLSX 파일
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    IngredientId:
+      name: ingredientId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    FormulaId:
+      name: formulaId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RunId:
+      name: runId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RecommendationId:
+      name: recommendationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    UnauthorizedError:
+      description: 인증 실패
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ForbiddenError:
+      description: 권한 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFoundError:
+      description: 리소스 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ConflictError:
+      description: 중복 또는 충돌
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: 입력 검증 실패
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+        trace_id:
+          type: string
+    UserRole:
+      type: string
+      enum: [owner, member]
+    FarmMemberStatus:
+      type: string
+      enum: [active, invited]
+    StorageLevel:
+      type: string
+      enum: [low, medium, high]
+    WetFeedPolicy:
+      type: string
+      enum: [allowed, seasonal, avoid]
+    Objective:
+      type: string
+      enum: [growth, cost_reduction, moisture_support, stability_first]
+    FormulaStatus:
+      type: string
+      enum: [draft, active, archived]
+    IngredientCategory:
+      type: string
+      enum: [energy, protein, roughage, byproduct, mineral, supplement]
+    Stage:
+      type: string
+      enum:
+        - growing_early
+        - growing_late
+        - fattening_early
+        - fattening_mid
+        - fattening_late
+        - breeding
+    PriceSource:
+      type: string
+      enum: [farm_setting, manual_override, market_default]
+    ActionType:
+      type: string
+      enum: [add, reduce, replace, remove]
+    NutrientStatus:
+      type: string
+      enum: [deficient, adequate, excess]
+    WarningSeverity:
+      type: string
+      enum: [info, warning, critical]
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+    AuthSessionResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: '#/components/schemas/CurrentUserResponse'
+    CurrentUserResponse:
+      type: object
+      required: [user_id, email, name, farm_id, farm_name, role]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        farm_id:
+          type: string
+          format: uuid
+        farm_name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+    FarmProfileResponse:
+      type: object
+      required:
+        - farm_id
+        - farm_name
+        - storage_level
+        - wet_feed_policy
+        - cost_priority
+        - stability_priority
+        - preferred_ingredients
+        - avoided_ingredients
+      properties:
+        farm_id:
+          type: string
+          format: uuid
+        farm_name:
+          type: string
+        storage_level:
+          $ref: '#/components/schemas/StorageLevel'
+        wet_feed_policy:
+          $ref: '#/components/schemas/WetFeedPolicy'
+        cost_priority:
+          type: integer
+          minimum: 1
+          maximum: 5
+        stability_priority:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+        preferred_ingredients:
+          type: array
+          items:
+            type: string
+            format: uuid
+        avoided_ingredients:
+          type: array
+          items:
+            type: string
+            format: uuid
+    UpdateFarmProfileRequest:
+      type: object
+      required: [storage_level, wet_feed_policy, cost_priority, stability_priority]
+      properties:
+        farm_name:
+          type: string
+        storage_level:
+          $ref: '#/components/schemas/StorageLevel'
+        wet_feed_policy:
+          $ref: '#/components/schemas/WetFeedPolicy'
+        cost_priority:
+          type: integer
+          minimum: 1
+          maximum: 5
+        stability_priority:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+        preferred_ingredient_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        avoided_ingredient_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+    FarmMember:
+      type: object
+      required: [user_id, email, name, role, status]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        status:
+          $ref: '#/components/schemas/FarmMemberStatus'
+    InviteFarmMemberRequest:
+      type: object
+      required: [email, name, role]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+    IngredientNutritionSnapshot:
+      type: object
+      required:
+        - moisture_pct
+        - dm_pct
+        - ash_pct_dm
+        - cp_pct_dm
+        - tdn_pct_dm
+        - ndf_pct_dm
+        - adf_pct_dm
+        - nfc_pct_dm
+        - ee_pct_dm
+        - ca_pct_dm
+        - p_pct_dm
+        - nfc_source
+        - source
+        - source_version
+        - analyzed_at
+        - trust_level
+      properties:
+        moisture_pct:
+          type: number
+        dm_pct:
+          type: number
+        ash_pct_dm:
+          type: number
+        cp_pct_dm:
+          type: number
+        tdn_pct_dm:
+          type: number
+        ndf_pct_dm:
+          type: number
+        adf_pct_dm:
+          type: number
+        nfc_pct_dm:
+          type: number
+        ee_pct_dm:
+          type: number
+        ca_pct_dm:
+          type: number
+        p_pct_dm:
+          type: number
+        nfc_source:
+          type: string
+          enum: [api, derived]
+        source:
+          type: string
+        source_version:
+          type: string
+        analyzed_at:
+          type: string
+          format: date
+        trust_level:
+          type: string
+    IngredientListItem:
+      type: object
+      required:
+        - ingredient_id
+        - code
+        - name_ko
+        - category
+        - default_price_krw_per_kg
+        - description
+        - current_nutrition
+        - ai_profile
+      properties:
+        ingredient_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name_ko:
+          type: string
+        category:
+          $ref: '#/components/schemas/IngredientCategory'
+        default_price_krw_per_kg:
+          type: number
+        description:
+          type: string
+        current_nutrition:
+          $ref: '#/components/schemas/IngredientNutritionSnapshot'
+        ai_profile:
+          $ref: '#/components/schemas/IngredientAiProfile'
+    IngredientAiProfile:
+      type: object
+      required: [benefits, cautions, storage_note, palatability_note, tags]
+      properties:
+        benefits:
+          type: array
+          items:
+            type: string
+        cautions:
+          type: array
+          items:
+            type: string
+        storage_note:
+          type: string
+        palatability_note:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+    IngredientDetail:
+      $ref: '#/components/schemas/IngredientListItem'
+    IngredientListResponse:
+      type: object
+      required: [items, page, limit, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/IngredientListItem'
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+    FarmIngredientSetting:
+      type: object
+      required:
+        - ingredient_id
+        - is_enabled
+        - is_banned
+        - price_source
+      properties:
+        ingredient_id:
+          type: string
+          format: uuid
+        is_enabled:
+          type: boolean
+        is_banned:
+          type: boolean
+        preferred:
+          type: boolean
+        avoided:
+          type: boolean
+        custom_price_krw_per_kg:
+          type: number
+        inventory_kg:
+          type: number
+        price_source:
+          $ref: '#/components/schemas/PriceSource'
+        note:
+          type: string
+    UpdateFarmIngredientSettingRequest:
+      type: object
+      properties:
+        is_enabled:
+          type: boolean
+        is_banned:
+          type: boolean
+        preferred:
+          type: boolean
+        avoided:
+          type: boolean
+        custom_price_krw_per_kg:
+          type: number
+        inventory_kg:
+          type: number
+        price_source:
+          $ref: '#/components/schemas/PriceSource'
+        note:
+          type: string
+    FormulaItem:
+      type: object
+      required: [ingredient_id, as_fed_kg_per_head_day, price_source]
+      properties:
+        ingredient_id:
+          type: string
+          format: uuid
+        as_fed_kg_per_head_day:
+          type: number
+        price_override_krw_per_kg:
+          type: number
+        price_source:
+          $ref: '#/components/schemas/PriceSource'
+    Formula:
+      type: object
+      required:
+        - formula_id
+        - name
+        - stage
+        - avg_weight_kg
+        - head_count
+        - objective
+        - status
+        - items
+      properties:
+        formula_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        stage:
+          $ref: '#/components/schemas/Stage'
+        avg_weight_kg:
+          type: number
+        head_count:
+          type: integer
+        objective:
+          $ref: '#/components/schemas/Objective'
+        target_adg:
+          type: number
+        status:
+          $ref: '#/components/schemas/FormulaStatus'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FormulaItem'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CreateFormulaRequest:
+      type: object
+      required: [name, stage, avg_weight_kg, head_count, objective, items]
+      properties:
+        name:
+          type: string
+        stage:
+          $ref: '#/components/schemas/Stage'
+        avg_weight_kg:
+          type: number
+        head_count:
+          type: integer
+        objective:
+          $ref: '#/components/schemas/Objective'
+        target_adg:
+          type: number
+        status:
+          $ref: '#/components/schemas/FormulaStatus'
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/FormulaItem'
+    UpdateFormulaRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateFormulaRequest'
+    AnalysisInputItem:
+      allOf:
+        - $ref: '#/components/schemas/FormulaItem'
+        - type: object
+          required: [ingredient_id]
+    AnalysisRunFromFormulaRequest:
+      type: object
+      required: [mode, formula_id]
+      properties:
+        mode:
+          type: string
+          const: formula
+        formula_id:
+          type: string
+          format: uuid
+    AnalysisRunAdHocRequest:
+      type: object
+      required: [mode, stage, avg_weight_kg, head_count, objective, items]
+      properties:
+        mode:
+          type: string
+          const: adhoc
+        stage:
+          $ref: '#/components/schemas/Stage'
+        avg_weight_kg:
+          type: number
+        head_count:
+          type: integer
+        objective:
+          $ref: '#/components/schemas/Objective'
+        target_adg:
+          type: number
+        measured_moisture_pct:
+          type: number
+        banned_ingredient_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        inventory_items:
+          type: array
+          items:
+            type: object
+            required: [ingredient_id, available_kg]
+            properties:
+              ingredient_id:
+                type: string
+                format: uuid
+              available_kg:
+                type: number
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/AnalysisInputItem'
+    AnalysisTargets:
+      type: object
+      required:
+        - target_cp_pct_dm
+        - target_tdn_pct_dm
+        - target_ndf_min_pct_dm
+        - target_ndf_max_pct_dm
+        - target_adf_min_pct_dm
+        - target_adf_max_pct_dm
+        - target_ca_pct_dm
+        - target_p_pct_dm
+      properties:
+        target_cp_pct_dm:
+          type: number
+        target_tdn_pct_dm:
+          type: number
+        target_ndf_min_pct_dm:
+          type: number
+        target_ndf_max_pct_dm:
+          type: number
+        target_adf_min_pct_dm:
+          type: number
+        target_adf_max_pct_dm:
+          type: number
+        target_ca_pct_dm:
+          type: number
+        target_p_pct_dm:
+          type: number
+    AnalysisStatuses:
+      type: object
+      required: [status_cp, status_tdn, status_ndf, status_adf, status_ca, status_p, status_ca_p_ratio, status_moisture]
+      properties:
+        status_cp:
+          $ref: '#/components/schemas/NutrientStatus'
+        status_tdn:
+          $ref: '#/components/schemas/NutrientStatus'
+        status_ndf:
+          $ref: '#/components/schemas/NutrientStatus'
+        status_adf:
+          $ref: '#/components/schemas/NutrientStatus'
+        status_ca:
+          $ref: '#/components/schemas/NutrientStatus'
+        status_p:
+          $ref: '#/components/schemas/NutrientStatus'
+        status_ca_p_ratio:
+          $ref: '#/components/schemas/NutrientStatus'
+        status_moisture:
+          $ref: '#/components/schemas/NutrientStatus'
+    Warning:
+      type: object
+      required: [code, message, severity]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        severity:
+          $ref: '#/components/schemas/WarningSeverity'
+    Recommendation:
+      type: object
+      required:
+        - recommendation_id
+        - rank
+        - action_type
+        - ingredient_id
+        - suggested_delta_as_fed_kg
+        - suggested_delta_dm_kg
+        - estimated_cost_delta
+        - score
+        - reason_text
+        - caution_text
+        - alternative_text
+      properties:
+        recommendation_id:
+          type: string
+          format: uuid
+        rank:
+          type: integer
+        action_type:
+          $ref: '#/components/schemas/ActionType'
+        ingredient_id:
+          type: string
+          format: uuid
+        suggested_delta_as_fed_kg:
+          type: number
+        suggested_delta_dm_kg:
+          type: number
+        estimated_cost_delta:
+          type: number
+        score:
+          type: number
+        estimated_changes:
+          type: object
+          additionalProperties:
+            type: number
+        reason_text:
+          type: string
+        caution_text:
+          type: string
+        alternative_text:
+          type: string
+    RecommendationMemo:
+      type: object
+      required: [memo_id, recommendation_id, applied, memo, created_by, created_at]
+      properties:
+        memo_id:
+          type: string
+          format: uuid
+        recommendation_id:
+          type: string
+          format: uuid
+        applied:
+          type: boolean
+        memo:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+    CreateRecommendationMemoRequest:
+      type: object
+      required: [applied, memo]
+      properties:
+        applied:
+          type: boolean
+        memo:
+          type: string
+          minLength: 1
+          maxLength: 1000
+    AnalysisRun:
+      type: object
+      required:
+        - run_id
+        - mode
+        - summary
+        - statuses
+        - targets
+        - warnings
+        - recommendations
+        - input_snapshot
+        - created_at
+      properties:
+        run_id:
+          type: string
+          format: uuid
+        formula_id:
+          type: string
+          format: uuid
+        mode:
+          type: string
+          enum: [formula, adhoc]
+        summary:
+          type: object
+          required:
+            - total_as_fed_kg
+            - total_dm_kg
+            - moisture_pct
+            - cp_pct_dm
+            - tdn_pct_dm
+            - ndf_pct_dm
+            - adf_pct_dm
+            - nfc_pct_dm
+            - ee_pct_dm
+            - ca_pct_dm
+            - p_pct_dm
+            - ca_p_ratio
+            - cost_per_head_day
+            - cost_per_kg
+          properties:
+            total_as_fed_kg:
+              type: number
+            total_dm_kg:
+              type: number
+            moisture_pct:
+              type: number
+            cp_pct_dm:
+              type: number
+            tdn_pct_dm:
+              type: number
+            ndf_pct_dm:
+              type: number
+            adf_pct_dm:
+              type: number
+            nfc_pct_dm:
+              type: number
+            ee_pct_dm:
+              type: number
+            ca_pct_dm:
+              type: number
+            p_pct_dm:
+              type: number
+            ca_p_ratio:
+              type: number
+            cost_per_head_day:
+              type: number
+            cost_per_kg:
+              type: number
+        statuses:
+          $ref: '#/components/schemas/AnalysisStatuses'
+        targets:
+          $ref: '#/components/schemas/AnalysisTargets'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Warning'
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recommendation'
+        input_snapshot:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time

@@ -1,0 +1,14 @@
+{
+  "name": "hanwoo-tmr-feedingsystem",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.7.0",
+  "scripts": {
+    "dev": "corepack pnpm --filter @feedingsystem/api dev",
+    "build": "corepack pnpm -r build",
+    "lint": "corepack pnpm -r lint",
+    "test": "corepack pnpm -r test",
+    "typecheck": "corepack pnpm -r typecheck",
+    "seed:normalize-ingredients": "node scripts/normalize-raw-ingredients.mjs"
+  }
+}

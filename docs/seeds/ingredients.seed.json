@@ -1,0 +1,528 @@
+[
+  {
+    "code": "CORN_GRAIN",
+    "name_ko": "파쇄옥수수",
+    "category": "energy",
+    "default_price_krw_per_kg": 460,
+    "description": "대표적인 고에너지 곡물 원료",
+    "nutrition": {
+      "moisture_pct": 12,
+      "dm_pct": 88,
+      "cp_pct_dm": 9,
+      "tdn_pct_dm": 88,
+      "ndf_pct_dm": 9.5,
+      "adf_pct_dm": 3.2,
+      "ca_pct_dm": 0.03,
+      "p_pct_dm": 0.28,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 1.5,
+      "ee_pct_dm": 4.3,
+      "nfc_pct_dm": 75.7,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "TDN 보강에 유리",
+        "기호성이 높은 편"
+      ],
+      "cautions": [
+        "과다 사용 시 산증 위험",
+        "섬유 부족 상황에서 단독 증량 주의"
+      ],
+      "storage_note": "건조 보관 필요",
+      "palatability_note": "기호성이 높음",
+      "tags": [
+        "energy",
+        "starch",
+        "fattening"
+      ]
+    }
+  },
+  {
+    "code": "BARLEY",
+    "name_ko": "보리",
+    "category": "energy",
+    "default_price_krw_per_kg": 430,
+    "description": "옥수수 대체가 가능한 곡물성 에너지원",
+    "nutrition": {
+      "moisture_pct": 11,
+      "dm_pct": 89,
+      "cp_pct_dm": 12.5,
+      "tdn_pct_dm": 84,
+      "ndf_pct_dm": 20,
+      "adf_pct_dm": 6,
+      "ca_pct_dm": 0.06,
+      "p_pct_dm": 0.38,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 2.6,
+      "ee_pct_dm": 2.3,
+      "nfc_pct_dm": 62.6,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "에너지와 단백질을 함께 보강",
+        "옥수수 대체 카드로 활용 가능"
+      ],
+      "cautions": [
+        "고전분 원료이므로 급격한 증량 주의"
+      ],
+      "storage_note": "건조 보관",
+      "palatability_note": "양호",
+      "tags": [
+        "energy",
+        "grain"
+      ]
+    }
+  },
+  {
+    "code": "SOYBEAN_MEAL",
+    "name_ko": "대두박",
+    "category": "protein",
+    "default_price_krw_per_kg": 790,
+    "description": "표준적인 건식 단백질원",
+    "nutrition": {
+      "moisture_pct": 11,
+      "dm_pct": 89,
+      "cp_pct_dm": 49,
+      "tdn_pct_dm": 84,
+      "ndf_pct_dm": 14,
+      "adf_pct_dm": 8,
+      "ca_pct_dm": 0.35,
+      "p_pct_dm": 0.72,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 6.4,
+      "ee_pct_dm": 1.5,
+      "nfc_pct_dm": 29.1,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "CP 부족 보강에 안정적",
+        "저장성이 양호"
+      ],
+      "cautions": [
+        "단가가 높은 편"
+      ],
+      "storage_note": "건식 저장 우수",
+      "palatability_note": "보통",
+      "tags": [
+        "protein",
+        "stable"
+      ]
+    }
+  },
+  {
+    "code": "WHEAT_BRAN",
+    "name_ko": "소맥피",
+    "category": "byproduct",
+    "default_price_krw_per_kg": 410,
+    "description": "에너지와 섬유를 함께 제공하는 부산물",
+    "nutrition": {
+      "moisture_pct": 12,
+      "dm_pct": 88,
+      "cp_pct_dm": 18,
+      "tdn_pct_dm": 71,
+      "ndf_pct_dm": 39,
+      "adf_pct_dm": 11,
+      "ca_pct_dm": 0.14,
+      "p_pct_dm": 1.05,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 5.5,
+      "ee_pct_dm": 4.6,
+      "nfc_pct_dm": 32.9,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "NDF 보강 보조",
+        "비용 밸런스가 양호"
+      ],
+      "cautions": [
+        "인 함량이 높아 과다 사용 시 균형 확인 필요"
+      ],
+      "storage_note": "건식 저장",
+      "palatability_note": "양호",
+      "tags": [
+        "fiber",
+        "cost_balanced",
+        "byproduct"
+      ]
+    }
+  },
+  {
+    "code": "COTTONSEED_MEAL",
+    "name_ko": "면실박",
+    "category": "protein",
+    "default_price_krw_per_kg": 520,
+    "description": "비교적 저렴한 단백질원",
+    "nutrition": {
+      "moisture_pct": 10,
+      "dm_pct": 90,
+      "cp_pct_dm": 41,
+      "tdn_pct_dm": 77,
+      "ndf_pct_dm": 29,
+      "adf_pct_dm": 18,
+      "ca_pct_dm": 0.18,
+      "p_pct_dm": 1.12,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 7.1,
+      "ee_pct_dm": 1.6,
+      "nfc_pct_dm": 21.3,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "CP 부족과 비용 균형에 유리"
+      ],
+      "cautions": [
+        "단계별 허용량 관리 필요"
+      ],
+      "storage_note": "건식 보관",
+      "palatability_note": "보통",
+      "tags": [
+        "protein",
+        "cost_saving"
+      ]
+    }
+  },
+  {
+    "code": "ALFALFA_HAY",
+    "name_ko": "알팔파 건초",
+    "category": "roughage",
+    "default_price_krw_per_kg": 620,
+    "description": "단백질과 조사료 성격을 동시에 가진 건초",
+    "nutrition": {
+      "moisture_pct": 10,
+      "dm_pct": 90,
+      "cp_pct_dm": 18,
+      "tdn_pct_dm": 60,
+      "ndf_pct_dm": 42,
+      "adf_pct_dm": 31,
+      "ca_pct_dm": 1.35,
+      "p_pct_dm": 0.24,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 10,
+      "ee_pct_dm": 2.5,
+      "nfc_pct_dm": 27.5,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "NDF/ADF 보강",
+        "Ca 보강에도 도움"
+      ],
+      "cautions": [
+        "수분 보완 목적에는 불리"
+      ],
+      "storage_note": "건조 유지 필요",
+      "palatability_note": "양호",
+      "tags": [
+        "roughage",
+        "fiber",
+        "calcium"
+      ]
+    }
+  },
+  {
+    "code": "CORN_SILAGE",
+    "name_ko": "옥수수 사일리지",
+    "category": "roughage",
+    "default_price_krw_per_kg": 180,
+    "description": "수분과 에너지를 함께 공급하는 대표 습식 조사료",
+    "nutrition": {
+      "moisture_pct": 67,
+      "dm_pct": 33,
+      "cp_pct_dm": 8.5,
+      "tdn_pct_dm": 70,
+      "ndf_pct_dm": 44,
+      "adf_pct_dm": 24,
+      "ca_pct_dm": 0.28,
+      "p_pct_dm": 0.24,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 4.5,
+      "ee_pct_dm": 4.2,
+      "nfc_pct_dm": 38.8,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "수분 보완과 조사료 공급",
+        "기호성이 좋음"
+      ],
+      "cautions": [
+        "저장성 관리와 계절 영향 확인 필요"
+      ],
+      "storage_note": "개봉 후 저장성 관리 중요",
+      "palatability_note": "좋음",
+      "tags": [
+        "wet",
+        "roughage",
+        "silage"
+      ]
+    }
+  },
+  {
+    "code": "RICE_STRAW",
+    "name_ko": "볏짚",
+    "category": "roughage",
+    "default_price_krw_per_kg": 210,
+    "description": "물리적 섬유 공급에 특화된 조사료",
+    "nutrition": {
+      "moisture_pct": 12,
+      "dm_pct": 88,
+      "cp_pct_dm": 4.5,
+      "tdn_pct_dm": 44,
+      "ndf_pct_dm": 72,
+      "adf_pct_dm": 45,
+      "ca_pct_dm": 0.22,
+      "p_pct_dm": 0.1,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 13,
+      "ee_pct_dm": 1.7,
+      "nfc_pct_dm": 8.8,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "ADF 부족 보강",
+        "물리적 섬유 유지"
+      ],
+      "cautions": [
+        "에너지 밀도가 낮음"
+      ],
+      "storage_note": "건식 저장 용이",
+      "palatability_note": "낮음",
+      "tags": [
+        "roughage",
+        "fiber",
+        "physical_fiber"
+      ]
+    }
+  },
+  {
+    "code": "BEET_PULP",
+    "name_ko": "비트펄프",
+    "category": "byproduct",
+    "default_price_krw_per_kg": 470,
+    "description": "소화성 섬유와 에너지를 함께 주는 원료",
+    "nutrition": {
+      "moisture_pct": 11,
+      "dm_pct": 89,
+      "cp_pct_dm": 10,
+      "tdn_pct_dm": 78,
+      "ndf_pct_dm": 45,
+      "adf_pct_dm": 24,
+      "ca_pct_dm": 0.62,
+      "p_pct_dm": 0.1,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 7.5,
+      "ee_pct_dm": 0.8,
+      "nfc_pct_dm": 36.7,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "NDF 부족과 에너지 부족을 동시에 보완"
+      ],
+      "cautions": [
+        "수분 과다 상황에서는 건식 사용량 조절 필요"
+      ],
+      "storage_note": "건식 보관",
+      "palatability_note": "양호",
+      "tags": [
+        "digestible_fiber",
+        "byproduct"
+      ]
+    }
+  },
+  {
+    "code": "BREWERS_GRAINS",
+    "name_ko": "맥주박",
+    "category": "byproduct",
+    "default_price_krw_per_kg": 160,
+    "description": "습식 단백질 부산물",
+    "nutrition": {
+      "moisture_pct": 74,
+      "dm_pct": 26,
+      "cp_pct_dm": 28,
+      "tdn_pct_dm": 70,
+      "ndf_pct_dm": 48,
+      "adf_pct_dm": 22,
+      "ca_pct_dm": 0.36,
+      "p_pct_dm": 0.58,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 4.8,
+      "ee_pct_dm": 5.2,
+      "nfc_pct_dm": 14,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "CP 부족 + 수분 부족 조합에 적합"
+      ],
+      "cautions": [
+        "저장성 관리가 중요",
+        "수분 과다 배합에는 감점"
+      ],
+      "storage_note": "개봉 후 부패 주의",
+      "palatability_note": "좋음",
+      "tags": [
+        "wet",
+        "protein",
+        "byproduct"
+      ]
+    }
+  },
+  {
+    "code": "SOYBEAN_CURD_RESIDUE",
+    "name_ko": "비지",
+    "category": "byproduct",
+    "default_price_krw_per_kg": 130,
+    "description": "습식 단백질원으로 수분 보완에 유리",
+    "nutrition": {
+      "moisture_pct": 79,
+      "dm_pct": 21,
+      "cp_pct_dm": 27,
+      "tdn_pct_dm": 78,
+      "ndf_pct_dm": 29,
+      "adf_pct_dm": 19,
+      "ca_pct_dm": 0.32,
+      "p_pct_dm": 0.52,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 5,
+      "ee_pct_dm": 8,
+      "nfc_pct_dm": 31,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "CP 부족과 수분 보완을 동시에 지원"
+      ],
+      "cautions": [
+        "저장성이 낮아 고온기 주의"
+      ],
+      "storage_note": "저장성 낮음",
+      "palatability_note": "좋음",
+      "tags": [
+        "wet",
+        "protein",
+        "cost_saving"
+      ]
+    }
+  },
+  {
+    "code": "MOLASSES",
+    "name_ko": "당밀",
+    "category": "supplement",
+    "default_price_krw_per_kg": 350,
+    "description": "기호성과 에너지 보완용 액상 원료",
+    "nutrition": {
+      "moisture_pct": 25,
+      "dm_pct": 75,
+      "cp_pct_dm": 6,
+      "tdn_pct_dm": 72,
+      "ndf_pct_dm": 0,
+      "adf_pct_dm": 0,
+      "ca_pct_dm": 0.9,
+      "p_pct_dm": 0.1,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 9,
+      "ee_pct_dm": 0.3,
+      "nfc_pct_dm": 84.7,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "기호성 개선",
+        "수분과 에너지 일부 보완"
+      ],
+      "cautions": [
+        "과량 사용 시 당 과다 가능"
+      ],
+      "storage_note": "점도 관리 필요",
+      "palatability_note": "매우 높음",
+      "tags": [
+        "supplement",
+        "palatability",
+        "energy"
+      ]
+    }
+  },
+  {
+    "code": "MINERAL_PREMIX",
+    "name_ko": "미네랄 프리믹스",
+    "category": "mineral",
+    "default_price_krw_per_kg": 980,
+    "description": "칼슘/인 등 무기질 보강용 premix",
+    "nutrition": {
+      "moisture_pct": 3,
+      "dm_pct": 97,
+      "cp_pct_dm": 0,
+      "tdn_pct_dm": 0,
+      "ndf_pct_dm": 0,
+      "adf_pct_dm": 0,
+      "ca_pct_dm": 18,
+      "p_pct_dm": 8,
+      "source": "official_table",
+      "source_version": "KR-2026.1",
+      "analyzed_at": "2026-01-15",
+      "trust_level": "official",
+      "ash_pct_dm": 92,
+      "ee_pct_dm": 0,
+      "nfc_pct_dm": 8,
+      "nfc_source": "derived"
+    },
+    "ai_profile": {
+      "benefits": [
+        "Ca/P 부족 보강에 직접적"
+      ],
+      "cautions": [
+        "과량 사용 금지"
+      ],
+      "storage_note": "건식 보관",
+      "palatability_note": "낮음",
+      "tags": [
+        "mineral",
+        "calcium",
+        "phosphorus"
+      ]
+    }
+  }
+]

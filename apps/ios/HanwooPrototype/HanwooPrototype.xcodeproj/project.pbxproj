@@ -1,0 +1,273 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA000000000000000000000C /* HanwooPrototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000007 /* HanwooPrototypeApp.swift */; };
+		AA000000000000000000000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000008 /* Assets.xcassets */; };
+		AA0000000000000000000014 /* PrototypeStore+CalculationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000016 /* PrototypeStore+CalculationEngine.swift */; };
+		AA0000000000000000000015 /* PrototypeStore+CorrectionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000017 /* PrototypeStore+CorrectionEngine.swift */; };
+		AA0000000000000000000018 /* IngredientCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000019 /* IngredientCatalog.swift */; };
+		AA000000000000000000001A /* RecommendationViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001B /* RecommendationViews.swift */; };
+		AA000000000000000000001C /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001D /* SupabaseService.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA0000000000000000000006 /* HanwooPrototype.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HanwooPrototype.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000007 /* HanwooPrototypeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HanwooPrototypeApp.swift; sourceTree = "<group>"; };
+		AA0000000000000000000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA0000000000000000000016 /* PrototypeStore+CalculationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrototypeStore+CalculationEngine.swift"; sourceTree = "<group>"; };
+		AA0000000000000000000017 /* PrototypeStore+CorrectionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrototypeStore+CorrectionEngine.swift"; sourceTree = "<group>"; };
+		AA0000000000000000000019 /* IngredientCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientCatalog.swift; sourceTree = "<group>"; };
+		AA000000000000000000001B /* RecommendationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationViews.swift; sourceTree = "<group>"; };
+		AA000000000000000000001D /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA000000000000000000000A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA0000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000004 /* HanwooPrototype */,
+				AA0000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000006 /* HanwooPrototype.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000004 /* HanwooPrototype */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000007 /* HanwooPrototypeApp.swift */,
+				AA0000000000000000000016 /* PrototypeStore+CalculationEngine.swift */,
+				AA0000000000000000000017 /* PrototypeStore+CorrectionEngine.swift */,
+				AA0000000000000000000019 /* IngredientCatalog.swift */,
+				AA000000000000000000001B /* RecommendationViews.swift */,
+				AA000000000000000000001D /* SupabaseService.swift */,
+				AA0000000000000000000008 /* Assets.xcassets */,
+			);
+			path = HanwooPrototype;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA0000000000000000000005 /* HanwooPrototype */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000011 /* Build configuration list for PBXNativeTarget "HanwooPrototype" */;
+			buildPhases = (
+				AA0000000000000000000009 /* Sources */,
+				AA000000000000000000000A /* Frameworks */,
+				AA000000000000000000000B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HanwooPrototype;
+			productName = HanwooPrototype;
+			productReference = AA0000000000000000000006 /* HanwooPrototype.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					AA0000000000000000000005 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+				};
+			};
+			buildConfigurationList = AA000000000000000000000E /* Build configuration list for PBXProject "HanwooPrototype" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA0000000000000000000002;
+			productRefGroup = AA0000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA0000000000000000000005 /* HanwooPrototype */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA000000000000000000000B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000000000000000000000D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000000000000000000009 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000000000000000000000C /* HanwooPrototypeApp.swift in Sources */,
+				AA0000000000000000000014 /* PrototypeStore+CalculationEngine.swift in Sources */,
+				AA0000000000000000000015 /* PrototypeStore+CorrectionEngine.swift in Sources */,
+				AA0000000000000000000018 /* IngredientCatalog.swift in Sources */,
+				AA000000000000000000001A /* RecommendationViews.swift in Sources */,
+				AA000000000000000000001C /* SupabaseService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA000000000000000000000F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000010 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AA0000000000000000000012 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "한우 사육";
+				INFOPLIST_KEY_SUPABASE_ANON_KEY = "";
+				INFOPLIST_KEY_SUPABASE_URL = "";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jowm.HanwooPrototype;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000013 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "한우 사육";
+				INFOPLIST_KEY_SUPABASE_ANON_KEY = "";
+				INFOPLIST_KEY_SUPABASE_URL = "";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jowm.HanwooPrototype;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA000000000000000000000E /* Build configuration list for PBXProject "HanwooPrototype" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000000000000000000000F /* Debug */,
+				AA0000000000000000000010 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000011 /* Build configuration list for PBXNativeTarget "HanwooPrototype" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000012 /* Debug */,
+				AA0000000000000000000013 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AA0000000000000000000001 /* Project object */;
+}
