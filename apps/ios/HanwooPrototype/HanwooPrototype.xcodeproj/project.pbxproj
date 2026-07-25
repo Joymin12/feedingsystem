@@ -44,7 +44,6 @@
 		TE00000000000000000000B3 /* ClassificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TE00000000000000000000F3 /* ClassificationTests.swift */; };
 		TE00000000000000000000B4 /* CorrectionEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TE00000000000000000000F4 /* CorrectionEngineTests.swift */; };
 		TE00000000000000000000B5 /* RepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TE00000000000000000000F5 /* RepositoryTests.swift */; };
-		FE000000000000000000102E /* SimulationWorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE000000000000000000102F /* SimulationWorkspaceView.swift */; };
 		FE0000000000000000001030 /* SettingsHelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001031 /* SettingsHelpView.swift */; };
 		FE0000000000000000001032 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001033 /* ExportService.swift */; };
 /* End PBXBuildFile section */
@@ -99,7 +98,6 @@
 		TE00000000000000000000F4 /* CorrectionEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrectionEngineTests.swift; sourceTree = "<group>"; };
 		TE00000000000000000000F5 /* RepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryTests.swift; sourceTree = "<group>"; };
 		TE00000000000000000000E0 /* HanwooPrototypeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HanwooPrototypeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FE000000000000000000102F /* SimulationWorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SimulationWorkspaceView.swift"; sourceTree = "<group>"; };
 		FE0000000000000000001031 /* SettingsHelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsHelpView.swift"; sourceTree = "<group>"; };
 		FE0000000000000000001033 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ExportService.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -174,7 +172,6 @@
 				FE0000000000000000001029 /* CorrectionEngine.swift */,
 				FE000000000000000000102B /* Repositories.swift */,
 				FE000000000000000000102D /* RecommendationExplanation.swift */,
-				FE000000000000000000102F /* SimulationWorkspaceView.swift */,
 				FE0000000000000000001031 /* SettingsHelpView.swift */,
 				FE0000000000000000001033 /* ExportService.swift */,
 				AA0000000000000000000008 /* Assets.xcassets */,
@@ -315,7 +312,6 @@
 				FE0000000000000000001028 /* CorrectionEngine.swift in Sources */,
 				FE000000000000000000102A /* Repositories.swift in Sources */,
 				FE000000000000000000102C /* RecommendationExplanation.swift in Sources */,
-				FE000000000000000000102E /* SimulationWorkspaceView.swift in Sources */,
 				FE0000000000000000001030 /* SettingsHelpView.swift in Sources */,
 				FE0000000000000000001032 /* ExportService.swift in Sources */,
 				AA0000000000000000000020 /* DesignSystem.swift in Sources */,

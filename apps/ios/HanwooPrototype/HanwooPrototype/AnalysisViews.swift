@@ -145,15 +145,6 @@ struct AnalysisDetailView: View {
                     }
                     .buttonStyle(PrimaryButtonStyle())
 
-                    NavigationLink {
-                        SimulationWorkspaceView(formula: formula)
-                            .environmentObject(store)
-                    } label: {
-                        Text("직접 증감해보기")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(SecondaryButtonStyle())
-
                     Button {
                         store.saveAnalysisSnapshot(for: formula)
                         didSaveSnapshot = true
@@ -163,14 +154,6 @@ struct AnalysisDetailView: View {
                     }
                     .buttonStyle(SecondaryButtonStyle())
                     .disabled(didSaveSnapshot)
-
-                    NavigationLink {
-                        DiaryListView()
-                    } label: {
-                        Text("사육일지 열기")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
                 }
                 .padding(20)
             }

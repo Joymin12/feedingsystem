@@ -39,7 +39,7 @@ struct AIRecommendationView: View {
                             if let reference, !reference.correctionActions.isEmpty {
                                 Text("가장 가까운 참고 교정안")
                                     .font(.headline)
-                                adjustmentsCard(recommendation: reference, isReference: true)
+                                adjustmentsCard(recommendation: reference, isReference: true, formula: formula)
                                 resultCard(
                                     title: "참고안 적용 후 예상",
                                     subtitle: "완전 적정에는 도달하지 못합니다",
@@ -53,7 +53,7 @@ struct AIRecommendationView: View {
                             if !primary.isFullyResolved {
                                 NoticeBanner(kind: .warning, message: "완전 적정까지는 못 미칩니다. 남은 항목은 아래 결과에서 확인하세요.")
                             }
-                            adjustmentsCard(recommendation: primary, isReference: primary.isReferenceOnly)
+                            adjustmentsCard(recommendation: primary, isReference: primary.isReferenceOnly, formula: formula)
                             resultCard(
                                 title: "적용 후 영양성분",
                                 subtitle: "\(formula.stage.title) 기준, 조정 전 → 조정 후",
@@ -90,7 +90,7 @@ struct AIRecommendationView: View {
 
     // MARK: 조정안 카드 — "이 원료들을 이렇게 +/− 하세요"
 
-    private func adjustmentsCard(recommendation: Recommendation, isReference: Bool) -> some View {
+    private func adjustmentsCard(recommendation: Recommendation, isReference: Bool, formula: FeedFormula) -> some View {
         let decreases = recommendation.correctionActions.filter { $0.type == .decrease }
         let increases = recommendation.correctionActions.filter { $0.type != .decrease }
 
@@ -105,6 +105,45 @@ struct AIRecommendationView: View {
                 ForEach(decreases) { action in
                     actionRow(action, isIncrease: false)
                 }
+
+                Divider()
+                costRow(recommendation: recommendation, formula: formula)
+            }
+        }
+    }
+
+    // 조정 적용 시 원료비 변화 (원료별 단가 × 증감 kg 합산, 단가 미입력 원료는 기본단가 기준)
+    private func costRow(recommendation: Recommendation, formula: FeedFormula) -> some View {
+        let delta = recommendation.costDeltaKrw
+        let deltaText = delta == 0 ? "변동 없음" : (delta > 0 ? "+\(krwString(delta))" : "−\(krwString(abs(delta)))")
+
+        return VStack(alignment: .leading, spacing: 4) {
+            if let currentCost = store.totalCostKrw(for: formula) {
+                let afterCost = currentCost + delta
+                HStack {
+                    Text("총 원료비")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(krwString(currentCost))
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "arrow.right")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                    Text(krwString(afterCost))
+                        .font(.subheadline.monospacedDigit().bold())
+                        .foregroundStyle(delta > 0 ? AppPalette.warning : AppPalette.primary)
+                }
+            }
+            HStack {
+                Text("원료비 변동")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(deltaText)
+                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(delta > 0 ? AppPalette.warning : (delta < 0 ? AppPalette.primary : Color.secondary))
             }
         }
     }
