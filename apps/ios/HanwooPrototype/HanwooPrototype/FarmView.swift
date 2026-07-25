@@ -42,6 +42,13 @@ struct FarmView: View {
                 }
                 .buttonStyle(.plain)
 
+                NavigationLink {
+                    SettingsHelpView()
+                } label: {
+                    QuickActionCard(title: "설정·도움말", subtitle: "성장단계 변경, 용어 안내, 데이터 관리", icon: "gearshape.fill")
+                }
+                .buttonStyle(.plain)
+
                 if store.currentUser?.isAdmin == true {
                     NavigationLink {
                         RegressionSuiteView()

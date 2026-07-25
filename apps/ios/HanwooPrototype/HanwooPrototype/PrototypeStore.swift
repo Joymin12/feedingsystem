@@ -10,6 +10,8 @@ final class PrototypeStore: ObservableObject {
     let userRepository: UserRepository
     let postRepository: PostRepository
     let userIngredientRepository: UserIngredientRepository
+    let formulaRepository: FormulaRepository
+    let analysisHistoryRepository: AnalysisHistoryRepository
 
     // MARK: - 원료 DB (수집/정제된 실데이터 기반, 가격은 카테고리별 기본값)
     let ingredientDefinitions: [IngredientDefinition] = PrototypeStore.ingredientCatalog
@@ -17,7 +19,14 @@ final class PrototypeStore: ObservableObject {
     @Published var isAuthenticated = false
     @Published var selectedStage: FarmStage?
     @Published var farmName = "행복한 한우 농장"
-    @Published var formulas: [FeedFormula]
+    // 배합은 수정 즉시 자동 저장된다(초안 복구). 시드 테스트 배합은 저장 대상에서 제외.
+    @Published var formulas: [FeedFormula] {
+        didSet { formulaRepository.saveFormulas(formulas.filter { !$0.isTestFormula }) }
+    }
+    // 저장된 분석 이력. 변경 즉시 영속화.
+    @Published var savedAnalyses: [SavedAnalysis] {
+        didSet { analysisHistoryRepository.saveAnalyses(savedAnalyses) }
+    }
     @Published var diaryEntries: [DiaryEntry]
     @Published var posts: [CommunityPost]
     @Published var userIngredientDefinitions: [UserIngredientDefinition]
@@ -29,12 +38,17 @@ final class PrototypeStore: ObservableObject {
         let userRepo = UserDefaultsUserRepository()
         let postRepo = UserDefaultsPostRepository()
         let ingredientRepo = UserDefaultsUserIngredientRepository()
+        let formulaRepo = UserDefaultsFormulaRepository()
+        let historyRepo = UserDefaultsAnalysisHistoryRepository()
         self.userRepository = userRepo
         self.postRepository = postRepo
         self.userIngredientRepository = ingredientRepo
+        self.formulaRepository = formulaRepo
+        self.analysisHistoryRepository = historyRepo
         self.users = supabaseService.isConfigured ? [] : userRepo.loadUsers()
         self.currentLoginID = supabaseService.isConfigured ? nil : userRepo.loadCurrentLoginID()
         self.userIngredientDefinitions = ingredientRepo.loadUserIngredients()
+        self.savedAnalyses = historyRepo.loadAnalyses()
         let formulaA = FeedFormula(
             name: "비육전기 기본 배합",
             stage: .fatteningEarly,
@@ -156,8 +170,12 @@ final class PrototypeStore: ObservableObject {
             checkedAt: .now
         )
 
-        self.formulas = [formulaA, formulaB, formulaC, formulaD, formulaE, formulaF, formulaG, formulaH]
-        self.selectedFormulaID = formulaA.id
+        // 저장된 사용자 배합이 있으면 복원하고, 없으면 기본 시드를 사용한다.
+        // 엔진 검증용 테스트 배합(C~G)은 항상 코드 시드에서 온다.
+        let savedUserFormulas = formulaRepo.loadFormulas()
+        let userFormulas = savedUserFormulas.isEmpty ? [formulaA, formulaB, formulaH] : savedUserFormulas
+        self.formulas = userFormulas + [formulaC, formulaD, formulaE, formulaF, formulaG]
+        self.selectedFormulaID = userFormulas.first?.id ?? formulaA.id
 
         #if DEBUG
         let _debugFormulas = [formulaC, formulaD, formulaE, formulaF, formulaG]

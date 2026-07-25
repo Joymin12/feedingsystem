@@ -12,8 +12,9 @@ extension PrototypeStore {
     func buildRecommendations(
         formula: FeedFormula,
         stage: FarmStage,
-        metrics: AnalysisSummaryMetrics
+        metrics: AnalysisSummaryMetrics,
+        constraints: SimulationConstraints = .none
     ) -> [Recommendation] {
-        correctionEngine.buildRecommendations(formula: formula, stage: stage, metrics: metrics)
+        correctionEngine.buildRecommendations(formula: formula, stage: stage, metrics: metrics, constraints: constraints)
     }
 }

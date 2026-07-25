@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum FarmStage: String, CaseIterable, Identifiable {
+enum FarmStage: String, CaseIterable, Identifiable, Codable {
     case growing
     case fatteningEarly
     case fatteningLate
@@ -146,7 +146,7 @@ struct StageCriteria {
     var moistureCautionMaximumPct: Double { moistureBand.cautionMaximum }
 }
 
-enum StatusTone: String {
+enum StatusTone: String, Codable {
     case deficient
     case adequate
     case excess
@@ -169,9 +169,19 @@ enum StatusTone: String {
         case .caution: .yellow
         }
     }
+
+    // 상태를 색상에만 의존해 전달하지 않도록 라벨과 함께 쓰는 아이콘 (접근성)
+    var iconName: String {
+        switch self {
+        case .deficient: "arrow.down.circle.fill"
+        case .adequate: "checkmark.circle.fill"
+        case .excess: "arrow.up.circle.fill"
+        case .caution: "exclamationmark.triangle.fill"
+        }
+    }
 }
 
-enum WeightUnit: String, CaseIterable, Identifiable, Equatable {
+enum WeightUnit: String, CaseIterable, Identifiable, Equatable, Codable {
     case kg
     case g
 
@@ -248,7 +258,7 @@ struct UserIngredientDefinition: Identifiable, Codable, Equatable {
     }
 }
 
-struct IngredientLine: Identifiable, Equatable {
+struct IngredientLine: Identifiable, Equatable, Codable {
     let id: UUID
     var name: String
     var definitionID: String?
@@ -273,7 +283,7 @@ struct IngredientLine: Identifiable, Equatable {
     }
 }
 
-struct FeedFormula: Identifiable, Equatable {
+struct FeedFormula: Identifiable, Equatable, Codable {
     let id: UUID
     var name: String
     var stage: FarmStage
@@ -298,8 +308,8 @@ struct FeedFormula: Identifiable, Equatable {
     }
 }
 
-struct NutrientStatus: Identifiable {
-    let id = UUID()
+struct NutrientStatus: Identifiable, Codable {
+    var id = UUID()
     var nutrient: String
     var currentValue: String
     var targetValue: String
@@ -307,7 +317,7 @@ struct NutrientStatus: Identifiable {
     var message: String
 }
 
-enum RecommendationStrategy: String, CaseIterable, Identifiable {
+enum RecommendationStrategy: String, CaseIterable, Identifiable, Codable {
     case ownedFirst
     case costEffective
     case maintenance
@@ -325,7 +335,36 @@ enum RecommendationStrategy: String, CaseIterable, Identifiable {
     }
 }
 
-struct Recommendation: Identifiable {
+// 교정 알고리즘 버전. 엔진 동작이 바뀌면 올리고 CHANGELOG에 기록한다.
+// 저장된 분석 이력이 어떤 엔진으로 계산됐는지 재현·설명하는 데 쓴다.
+enum CorrectionAlgorithm {
+    static let version = "2.0.0"
+}
+
+// 증감 시뮬레이션 제약 (사용자 설정)
+// - 잠금 원료: 엔진이 증감할 수 없음
+// - 원료별 최소/최대 kg: 허용 투입 범위 (원물 기준)
+// - maxAdjustmentRatio: 원료당 조정 폭 한도 (0.5 = 원래 양의 ±50% 이내)
+// - costWeight: 0보다 크면 원료비 증가에 페널티 (1.0 ≈ 1만원 증가를 이탈 1점으로 취급)
+struct SimulationConstraints {
+    var lockedIngredientIDs: Set<String> = []
+    var minKgByIngredientID: [String: Double] = [:]
+    var maxKgByIngredientID: [String: Double] = [:]
+    var maxAdjustmentRatio: Double?
+    var costWeight: Double = 0
+
+    static let none = SimulationConstraints()
+
+    var isUnconstrained: Bool {
+        lockedIngredientIDs.isEmpty &&
+            minKgByIngredientID.isEmpty &&
+            maxKgByIngredientID.isEmpty &&
+            maxAdjustmentRatio == nil &&
+            costWeight == 0
+    }
+}
+
+struct Recommendation: Identifiable, Codable {
     var id: String { strategy.rawValue }
     var strategy: RecommendationStrategy
     var title: String
@@ -345,16 +384,17 @@ struct Recommendation: Identifiable {
     var resolutionRate: Double
     var isFullyResolved: Bool
     var isReferenceOnly: Bool
+    var algorithmVersion: String = CorrectionAlgorithm.version
 }
 
-enum CorrectionActionType {
+enum CorrectionActionType: String, Codable {
     case decrease
     case increase
     case add
 }
 
-struct CorrectionAction: Identifiable {
-    let id = UUID()
+struct CorrectionAction: Identifiable, Codable {
+    var id = UUID()
     var ingredientID: String?
     var ingredientName: String
     var type: CorrectionActionType
@@ -362,7 +402,7 @@ struct CorrectionAction: Identifiable {
     var displayAmount: String
 }
 
-struct AnalysisSummaryMetrics {
+struct AnalysisSummaryMetrics: Codable {
     var totalAsFedKg: Double
     var totalDmKg: Double
     var moisturePct: Double
@@ -383,6 +423,20 @@ struct AnalysisRun: Identifiable {
     var formulaName: String
     var stage: FarmStage
     var checkedAt: Date
+    var summary: String
+    var metrics: AnalysisSummaryMetrics
+    var statuses: [NutrientStatus]
+    var recommendations: [Recommendation]
+}
+
+// 저장된 분석 이력 스냅샷.
+// 결과뿐 아니라 당시 배합 사본과 엔진 버전을 함께 보관해,
+// 이후 엔진이 갱신되어도 과거 이력이 저장 당시 값 그대로 재현되게 한다.
+struct SavedAnalysis: Identifiable, Codable {
+    var id = UUID()
+    var savedAt: Date
+    var algorithmVersion: String
+    var formula: FeedFormula
     var summary: String
     var metrics: AnalysisSummaryMetrics
     var statuses: [NutrientStatus]

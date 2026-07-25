@@ -113,13 +113,95 @@ struct StatusPill: View {
     let tone: StatusTone
 
     var body: some View {
-        Text(title)
-            .font(.caption.weight(.semibold))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(tone.color.opacity(0.12))
-            .foregroundStyle(tone.color)
-            .clipShape(Capsule())
+        // 접근성: 색상에만 의존하지 않도록 아이콘 + 텍스트 라벨을 함께 표기한다.
+        HStack(spacing: 4) {
+            Image(systemName: tone.iconName)
+                .font(.caption2)
+            Text(title)
+                .font(.caption.weight(.semibold))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(tone.color.opacity(0.12))
+        .foregroundStyle(tone.color)
+        .clipShape(Capsule())
+        .accessibilityLabel("\(title) 상태")
+    }
+}
+
+// 빈 목록 상태 안내
+struct EmptyStateView: View {
+    let icon: String
+    let title: String
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text(title)
+                .font(.headline)
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 44)
+    }
+}
+
+// 경고/안내 배너 (색상 + 아이콘 + 텍스트 병기)
+struct NoticeBanner: View {
+    enum Kind {
+        case info, warning
+
+        var icon: String {
+            switch self {
+            case .info: "info.circle.fill"
+            case .warning: "exclamationmark.triangle.fill"
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .info: .blue
+            case .warning: .orange
+            }
+        }
+    }
+
+    let kind: Kind
+    let message: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: kind.icon)
+                .foregroundStyle(kind.color)
+            Text(message)
+                .font(.footnote)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(kind.color.opacity(0.10))
+        )
+    }
+}
+
+struct SecondaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .foregroundStyle(AppPalette.primary)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppPalette.primary.opacity(configuration.isPressed ? 0.4 : 0.8), lineWidth: 1.5)
+            )
     }
 }
 

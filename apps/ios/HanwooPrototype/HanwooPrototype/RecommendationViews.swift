@@ -39,6 +39,26 @@ struct AIRecommendationView: View {
                                 isExpanded: expandedRecommendationIDs.contains(primaryRecommendation.id),
                                 onToggleExpanded: { toggleExpansion(for: primaryRecommendation.id) }
                             )
+
+                            // 추천 산출 근거: 문제 → 조정 → 교차 영향 → 한계 → 계산 방식
+                            SectionCard(title: "왜 이렇게 추천했나", subtitle: "엔진 계산값 기반 설명") {
+                                VStack(alignment: .leading, spacing: 14) {
+                                    ForEach(RecommendationExplanationBuilder.sections(
+                                        for: primaryRecommendation,
+                                        beforeMetrics: analysis.metrics,
+                                        beforeStatuses: analysis.statuses,
+                                        stage: formula.stage
+                                    )) { section in
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(section.title)
+                                                .font(.subheadline.weight(.semibold))
+                                            Text(section.body)
+                                                .font(.footnote)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 

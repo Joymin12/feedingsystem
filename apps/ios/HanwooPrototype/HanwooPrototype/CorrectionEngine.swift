@@ -90,7 +90,8 @@ struct CorrectionEngine {
     func buildRecommendations(
         formula: FeedFormula,
         stage: FarmStage,
-        metrics: AnalysisSummaryMetrics
+        metrics: AnalysisSummaryMetrics,
+        constraints: SimulationConstraints = .none
     ) -> [Recommendation] {
         guard metrics.totalDmKg > 0 else {
             return [noSolutionRecommendation(metrics: metrics)]
@@ -104,7 +105,7 @@ struct CorrectionEngine {
         }
 
         // 1순위: 배합 비율 최적화 탐색. 9축 전부 충족하는 조합을 찾으면 그대로 채택한다.
-        let optimizedPlan = optimizeInMixPlan(formula: formula, stage: stage, originalMetrics: metrics)
+        let optimizedPlan = optimizeInMixPlan(formula: formula, stage: stage, originalMetrics: metrics, constraints: constraints)
         if let optimizedPlan,
            optimizedPlan.isFullyResolved,
            isPlanViable(optimizedPlan.simulatedMetrics, criteria: criteria) {
@@ -115,6 +116,23 @@ struct CorrectionEngine {
                 stage: stage,
                 referenceOnly: false
             )]
+        }
+
+        // 사용자 제약(잠금·한도)이 있으면 제약을 모르는 휴리스틱 폴백을 쓰지 않는다.
+        // 최적화 결과가 없거나 불충분하면 정직하게 noSolution + 참고안만 반환한다.
+        if !constraints.isUnconstrained {
+            let limitations = limitationNotes(formula: formula, stage: stage, metrics: metrics)
+            var results: [Recommendation] = [noSolutionRecommendation(metrics: metrics, limitations: limitations)]
+            if let optimizedPlan {
+                results.append(planToRecommendation(
+                    plan: optimizedPlan,
+                    strategy: .ownedFirst,
+                    originalMetrics: metrics,
+                    stage: stage,
+                    referenceOnly: true
+                ))
+            }
+            return results
         }
 
         // 2순위: 기존 패턴 휴리스틱. 최적화 결과도 후보에 포함해 함께 비교한다.
@@ -169,14 +187,14 @@ struct CorrectionEngine {
     private func optimizeInMixPlan(
         formula: FeedFormula,
         stage: FarmStage,
-        originalMetrics: AnalysisSummaryMetrics
+        originalMetrics: AnalysisSummaryMetrics,
+        constraints: SimulationConstraints = .none
     ) -> PatternPlan? {
-        let criteria = stage.criteria
-
         // 조정 대상: 성분표가 있는(계산 가능한) 배합 내 원료만.
-        // 물·벤토나이트처럼 definitionID가 없는 라인은 엔진이 건드리지 않고 그대로 둔다.
+        // 물·벤토나이트처럼 definitionID가 없는 라인과 사용자가 잠근 원료는 건드리지 않는다.
         let adjustable = formula.items.indices.filter { index in
-            guard let defID = formula.items[index].definitionID else { return false }
+            guard let defID = formula.items[index].definitionID,
+                  !constraints.lockedIngredientIDs.contains(defID) else { return false }
             return provider.ingredientDefinition(id: defID) != nil
         }
         guard !adjustable.isEmpty else { return nil }
@@ -187,29 +205,48 @@ struct CorrectionEngine {
             base.items[index].unit = .kg
         }
 
-        let startGap = totalCoreGap(metrics: originalMetrics, criteria: criteria)
+        let context = OptimizeContext(
+            adjustable: adjustable,
+            criteria: stage.criteria,
+            constraints: constraints,
+            originalAmounts: Dictionary(uniqueKeysWithValues: adjustable.map { ($0, base.items[$0].amount) }),
+            prices: Dictionary(uniqueKeysWithValues: adjustable.map { index -> (Int, Double) in
+                guard let defID = base.items[index].definitionID,
+                      let definition = provider.ingredientDefinition(id: defID) else { return (index, 0) }
+                return (index, Double(effectivePricePerKgInFormula(for: definition, within: formula)))
+            }),
+            definitionIDs: Dictionary(uniqueKeysWithValues: adjustable.compactMap { index in
+                base.items[index].definitionID.map { (index, $0) }
+            })
+        )
+
+        guard let startScore = score(base, context: context) else { return nil }
         var bestFormula = base
-        var bestGap = startGap
+        var bestScore = startScore
         let restartAmountKg = 0.5
 
         func consider(_ candidate: FeedFormula) {
-            guard let result = descend(candidate, adjustable: adjustable, criteria: criteria) else { return }
-            if result.gap < bestGap - 1e-9 {
-                bestGap = result.gap
+            var clamped = candidate
+            for index in adjustable {
+                clamped.items[index].amount = clampKg(clamped.items[index].amount, index: index, context: context)
+            }
+            guard let result = descend(clamped, context: context) else { return }
+            if result.score < bestScore - 1e-9 {
+                bestScore = result.score
                 bestFormula = result.formula
             }
         }
 
-        // 시작점 다변화: 국소 최저점 탈출용. 현재 배합 / 균등 / 조사료 중심 / 농후사료 중심 등.
+        // 시작점 다변화: 국소 최저점 탈출용. 현재 배합 / 균등 / 조사료 중심 / 농후사료 중심.
         consider(base)
-        if bestGap > 0 {
+        if bestScore > 0 {
             let totalKg = adjustable.reduce(0.0) { $0 + base.items[$1].amount }
             let evenKg = adjustable.isEmpty ? 0 : totalKg / Double(adjustable.count)
             var even = base
             for index in adjustable { even.items[index].amount = evenKg }
             consider(even)
         }
-        if bestGap > 0 {
+        if bestScore > 0 {
             var roughageHeavy = base
             var concentrateHeavy = base
             for index in adjustable {
@@ -220,7 +257,7 @@ struct CorrectionEngine {
                 concentrateHeavy.items[index].amount *= isRoughage ? 0.4 : 1.5
             }
             consider(roughageHeavy)
-            if bestGap > 0 { consider(concentrateHeavy) }
+            if bestScore > 0 { consider(concentrateHeavy) }
         }
 
         // 섭동 재시작: 고정 시드 xorshift라 실행마다 동일한 결과가 나온다.
@@ -232,7 +269,7 @@ struct CorrectionEngine {
             return Double(rngState % 10_000) / 10_000.0
         }
         var perturbation = 0
-        while bestGap > 0 && perturbation < 14 {
+        while bestScore > 0 && perturbation < 14 {
             perturbation += 1
             var candidate = bestFormula
             for index in adjustable {
@@ -247,10 +284,10 @@ struct CorrectionEngine {
         // 랜덤 워크 정련: 원료 하나를 임의 배율로 흔들어 개선되면 채택.
         // 고정 배율 좌표하강이 빠지는 국소 최저점을 벗어나기 위한 단계.
         var walkRestart = 0
-        while bestGap > 0 && walkRestart < 8 {
+        while bestScore > 0 && walkRestart < 8 {
             walkRestart += 1
             var current = bestFormula
-            var currentGap = bestGap
+            var currentScore = bestScore
             var stepScale = 1.0
             for iteration in 0..<3000 {
                 guard let pick = adjustable.randomIndex(using: &rngState) else { break }
@@ -260,44 +297,87 @@ struct CorrectionEngine {
                 let candidateKg = currentKg <= 0.0001
                     ? (nextUnit() < 0.5 ? 0 : restartAmountKg)
                     : currentKg * factor
-                candidate.items[pick].amount = candidateKg
+                candidate.items[pick].amount = clampKg(candidateKg, index: pick, context: context)
 
-                let calculation = calc.calculateMetrics(for: candidate)
-                guard calculation.metrics.totalDmKg > 0 else { continue }
-                let gap = totalCoreGap(metrics: calculation.metrics, criteria: criteria)
-                if gap < currentGap - 1e-9 {
-                    currentGap = gap
+                guard let candidateScore = score(candidate, context: context) else { continue }
+                if candidateScore < currentScore - 1e-9 {
+                    currentScore = candidateScore
                     current = candidate
                 }
-                if gap <= 0 { break }
+                if candidateScore <= 0 { break }
                 if iteration % 600 == 599 { stepScale *= 0.6 }
             }
-            if currentGap < bestGap - 1e-9 {
-                bestGap = currentGap
+            if currentScore < bestScore - 1e-9 {
+                bestScore = currentScore
                 bestFormula = current
                 consider(current)
             }
         }
 
-        guard bestGap < startGap - 1e-9 else { return nil }
+        guard bestScore < startScore - 1e-9 else { return nil }
         return makePlanFromOptimizedFormula(
             original: formula,
             optimized: bestFormula,
             stage: stage,
-            originalMetrics: originalMetrics
+            originalMetrics: originalMetrics,
+            lockedIngredientIDs: constraints.lockedIngredientIDs
         )
     }
 
-    // 좌표하강: 원료 하나씩 배율을 바꿔보며 이탈량이 줄면 채택. 개선이 없으면 종료.
+    // 최적화 탐색에 쓰는 불변 문맥: 조정 대상, 기준표, 사용자 제약, 원래 투입량, 원료 단가.
+    private struct OptimizeContext {
+        let adjustable: [Int]
+        let criteria: StageCriteria
+        let constraints: SimulationConstraints
+        let originalAmounts: [Int: Double]
+        let prices: [Int: Double]
+        let definitionIDs: [Int: String]
+    }
+
+    // 목적함수: 가중 목표 이탈(totalCoreGap) + 선택적 비용 페널티.
+    // costWeight 1.0 = 원료비 1만원 증가를 이탈 1점과 같게 취급.
+    private func score(_ candidate: FeedFormula, context: OptimizeContext) -> Double? {
+        let calculation = calc.calculateMetrics(for: candidate)
+        guard calculation.metrics.totalDmKg > 0 else { return nil }
+        var value = totalCoreGap(metrics: calculation.metrics, criteria: context.criteria)
+        if context.constraints.costWeight > 0 {
+            var costDelta = 0.0
+            for index in context.adjustable {
+                let original = context.originalAmounts[index] ?? 0
+                costDelta += (candidate.items[index].amount - original) * (context.prices[index] ?? 0)
+            }
+            value += context.constraints.costWeight * max(0, costDelta) / 10_000
+        }
+        return value
+    }
+
+    // 하드 제약 적용: 원료별 최소/최대 kg, 원래 양 대비 최대 조정 폭. 음수 방지 포함.
+    private func clampKg(_ kg: Double, index: Int, context: OptimizeContext) -> Double {
+        var value = max(0, kg)
+        let constraints = context.constraints
+        if let original = context.originalAmounts[index], let ratio = constraints.maxAdjustmentRatio {
+            let lower = original * max(0, 1 - ratio)
+            let upper = original * (1 + ratio)
+            value = min(max(value, lower), upper)
+        }
+        if let defID = context.definitionIDs[index] {
+            if let minKg = constraints.minKgByIngredientID[defID] {
+                value = max(value, minKg)
+            }
+            if let maxKg = constraints.maxKgByIngredientID[defID] {
+                value = min(value, maxKg)
+            }
+        }
+        return value
+    }
+
+    // 좌표하강: 원료 하나씩 배율을 바꿔보며 점수가 줄면 채택. 개선이 없으면 종료.
     private func descend(
         _ start: FeedFormula,
-        adjustable: [Int],
-        criteria: StageCriteria
-    ) -> (formula: FeedFormula, gap: Double)? {
+        context: OptimizeContext
+    ) -> (formula: FeedFormula, score: Double)? {
         var working = start
-        let initial = calc.calculateMetrics(for: working)
-        guard initial.metrics.totalDmKg > 0 else { return nil }
-        var bestGap = totalCoreGap(metrics: initial.metrics, criteria: criteria)
+        guard var bestScore = score(working, context: context) else { return nil }
 
         // 0 = 원료 제외, 3.0 = 3배 증량. 라운드가 반복되며 누적되므로 대폭 이동도 도달 가능.
         let factors: [Double] = [0, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 0.98, 1.02, 1.05, 1.1, 1.25, 1.5, 2.0, 3.0]
@@ -313,52 +393,50 @@ struct CorrectionEngine {
 
             for scale in globalScales {
                 var candidate = working
-                for index in adjustable {
-                    candidate.items[index].amount *= scale
+                for index in context.adjustable {
+                    candidate.items[index].amount = clampKg(candidate.items[index].amount * scale, index: index, context: context)
                 }
-                let calculation = calc.calculateMetrics(for: candidate)
-                guard calculation.metrics.totalDmKg > 0 else { continue }
-                let gap = totalCoreGap(metrics: calculation.metrics, criteria: criteria)
-                if gap < bestGap - 1e-9 {
-                    bestGap = gap
+                guard let candidateScore = score(candidate, context: context) else { continue }
+                if candidateScore < bestScore - 1e-9 {
+                    bestScore = candidateScore
                     working = candidate
                     improved = true
                 }
             }
 
-            for index in adjustable {
+            for index in context.adjustable {
                 let currentKg = working.items[index].amount
                 for factor in factors {
-                    let candidateKg = currentKg <= 0.0001
+                    let rawKg = currentKg <= 0.0001
                         ? (factor > 1 ? restartAmountKg : 0)
                         : currentKg * factor
+                    let candidateKg = clampKg(rawKg, index: index, context: context)
                     if abs(candidateKg - currentKg) < 0.0001 { continue }
 
                     var candidate = working
                     candidate.items[index].amount = candidateKg
-                    let calculation = calc.calculateMetrics(for: candidate)
-                    guard calculation.metrics.totalDmKg > 0 else { continue }
+                    guard let candidateScore = score(candidate, context: context) else { continue }
 
-                    let gap = totalCoreGap(metrics: calculation.metrics, criteria: criteria)
-                    if gap < bestGap - 1e-9 {
-                        bestGap = gap
+                    if candidateScore < bestScore - 1e-9 {
+                        bestScore = candidateScore
                         working = candidate
                         improved = true
                     }
                 }
             }
-            if !improved || bestGap <= 0 { break }
+            if !improved || bestScore <= 0 { break }
         }
-        return (working, bestGap)
+        return (working, bestScore)
     }
 
     private func makePlanFromOptimizedFormula(
         original: FeedFormula,
         optimized: FeedFormula,
         stage: FarmStage,
-        originalMetrics: AnalysisSummaryMetrics
+        originalMetrics: AnalysisSummaryMetrics,
+        lockedIngredientIDs: Set<String> = []
     ) -> PatternPlan? {
-        guard let normalized = rescaleToOriginalTotal(original: original, simulated: optimized),
+        guard let normalized = rescaleToOriginalTotal(original: original, simulated: optimized, lockedIngredientIDs: lockedIngredientIDs),
               !normalized.actions.isEmpty else { return nil }
 
         let actions = normalized.actions
@@ -1092,21 +1170,32 @@ struct CorrectionEngine {
         beamNormalizePlanActions(formula: formula, stage: stage, baseActions: baseActions)
     }
 
-    // 시뮬레이션 최종안의 총 원물 kg을 사용자 입력 총량으로 비례 정규화하고,
+    // 시뮬레이션 최종안의 총 원물 kg을 사용자 입력 총량으로 정규화하고,
     // 원래 배합 대비 원료별 증감(원물 kg)으로 액션을 재산출한다.
-    // 전 원료를 동일 배율로 스케일하므로 DM 기준 영양소 %와 수분 %는 변하지 않는다.
+    // 고정 라인(성분 미등록·사용자 잠금)은 절대 바꾸지 않는다 — 사용자 입력 무단 변경 금지.
+    // 총량 보존은 엔진이 조정 가능한 원료들만 동일 배율로 스케일해 달성한다.
     private func rescaleToOriginalTotal(
         original: FeedFormula,
-        simulated: FeedFormula
+        simulated: FeedFormula,
+        lockedIngredientIDs: Set<String> = []
     ) -> (formula: FeedFormula, metrics: AnalysisSummaryMetrics, actions: [CorrectionAction])? {
+        func isFixed(_ item: IngredientLine) -> Bool {
+            guard let defID = item.definitionID,
+                  provider.ingredientDefinition(id: defID) != nil else { return true }
+            return lockedIngredientIDs.contains(defID)
+        }
+
         let originalTotalKg = original.items.reduce(0.0) { $0 + asFedKg(for: $1) }
-        let simulatedTotalKg = simulated.items.reduce(0.0) { $0 + asFedKg(for: $1) }
-        guard originalTotalKg > 0, simulatedTotalKg > 0 else { return nil }
+        let fixedKg = simulated.items.filter(isFixed).reduce(0.0) { $0 + asFedKg(for: $1) }
+        let simulatedAdjustableKg = simulated.items.filter { !isFixed($0) }.reduce(0.0) { $0 + asFedKg(for: $1) }
+        let targetAdjustableKg = originalTotalKg - fixedKg
+        guard originalTotalKg > 0, simulatedAdjustableKg > 0.0001, targetAdjustableKg > 0 else { return nil }
 
         var scaled = simulated
-        let factor = originalTotalKg / simulatedTotalKg
+        let factor = targetAdjustableKg / simulatedAdjustableKg
         for index in scaled.items.indices {
-            scaled.items[index].amount = asFedKg(for: scaled.items[index]) * factor
+            let kg = asFedKg(for: scaled.items[index])
+            scaled.items[index].amount = isFixed(scaled.items[index]) ? kg : kg * factor
             scaled.items[index].unit = .kg
         }
 

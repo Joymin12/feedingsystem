@@ -101,4 +101,53 @@ extension PrototypeStore {
             recommendations: recommendations
         )
     }
+
+    // MARK: - 분석 이력 (저장/복제/삭제)
+
+    // 현재 분석을 스냅샷으로 저장한다. 배합 사본과 엔진 버전을 함께 기록해
+    // 이후 엔진이 갱신되어도 저장 당시 값 그대로 재현된다.
+    @discardableResult
+    func saveAnalysisSnapshot(for formula: FeedFormula) -> SavedAnalysis {
+        let run = analysis(for: formula)
+        let record = SavedAnalysis(
+            savedAt: .now,
+            algorithmVersion: CorrectionAlgorithm.version,
+            formula: formula,
+            summary: run.summary,
+            metrics: run.metrics,
+            statuses: run.statuses,
+            recommendations: run.recommendations
+        )
+        savedAnalyses.insert(record, at: 0)
+        return record
+    }
+
+    func deleteSavedAnalysis(id: UUID) {
+        savedAnalyses.removeAll { $0.id == id }
+    }
+
+    @discardableResult
+    func duplicateSavedAnalysis(id: UUID) -> SavedAnalysis? {
+        guard let original = savedAnalyses.first(where: { $0.id == id }) else { return nil }
+        var copy = original
+        copy.id = UUID()
+        copy.savedAt = .now
+        savedAnalyses.insert(copy, at: 0)
+        return copy
+    }
+
+    // 저장된 배합을 현재 배합 목록으로 복제한다(새 이름·새 ID).
+    @discardableResult
+    func restoreFormula(from record: SavedAnalysis) -> FeedFormula {
+        var restored = record.formula
+        restored = FeedFormula(
+            name: restored.name + " (복원)",
+            stage: restored.stage,
+            items: restored.items,
+            checkedAt: .now
+        )
+        formulas.insert(restored, at: 0)
+        selectedFormulaID = restored.id
+        return restored
+    }
 }

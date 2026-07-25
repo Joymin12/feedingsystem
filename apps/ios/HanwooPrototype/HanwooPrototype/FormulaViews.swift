@@ -89,18 +89,34 @@ struct BlendView: View {
                         }
                     }
 
-                    if let totalCost = store.totalCostKrw(for: formula.wrappedValue) {
+                    // 실시간 합계·검증: 총 원물량과 원료비를 입력 즉시 반영한다.
+                    let liveTotalKg = formula.wrappedValue.items.reduce(0.0) { $0 + asFedKg(for: $1) }
+                    VStack(spacing: 10) {
                         HStack {
-                            Text("총 원료비 (원물 기준)")
+                            Text("총 원물량")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Text(krwString(totalCost))
+                            Text("\(numberString(liveTotalKg))kg")
                                 .font(.title3.bold())
-                                .foregroundStyle(Color.green)
                         }
-                        .padding()
-                        .background(RoundedRectangle(cornerRadius: 16).fill(Color.white))
+                        if let totalCost = store.totalCostKrw(for: formula.wrappedValue) {
+                            HStack {
+                                Text("총 원료비 (원물 기준)")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                Text(krwString(totalCost))
+                                    .font(.title3.bold())
+                                    .foregroundStyle(Color.green)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.white))
+
+                    if liveTotalKg <= 0 {
+                        NoticeBanner(kind: .warning, message: "투입량이 0입니다. 원료별 투입량을 입력해야 분석할 수 있습니다.")
                     }
 
                     NavigationLink {
