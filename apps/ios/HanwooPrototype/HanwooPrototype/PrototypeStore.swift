@@ -1,0 +1,230 @@
+import SwiftUI
+import OSLog
+
+@MainActor
+final class PrototypeStore: ObservableObject {
+    let supabaseService = SupabaseService()
+    let debugLogger = Logger(subsystem: "com.jowm.HanwooPrototype", category: "RegressionRecommendations")
+
+    // MARK: - 영속화 Repository (UserDefaults 구현은 Repositories.swift)
+    let userRepository: UserRepository
+    let postRepository: PostRepository
+    let userIngredientRepository: UserIngredientRepository
+
+    // MARK: - 원료 DB (수집/정제된 실데이터 기반, 가격은 카테고리별 기본값)
+    let ingredientDefinitions: [IngredientDefinition] = PrototypeStore.ingredientCatalog
+
+    @Published var isAuthenticated = false
+    @Published var selectedStage: FarmStage?
+    @Published var farmName = "행복한 한우 농장"
+    @Published var formulas: [FeedFormula]
+    @Published var diaryEntries: [DiaryEntry]
+    @Published var posts: [CommunityPost]
+    @Published var userIngredientDefinitions: [UserIngredientDefinition]
+    @Published var selectedFormulaID: UUID
+    @Published var users: [AppUser]
+    @Published var currentLoginID: String?
+
+    init() {
+        let userRepo = UserDefaultsUserRepository()
+        let postRepo = UserDefaultsPostRepository()
+        let ingredientRepo = UserDefaultsUserIngredientRepository()
+        self.userRepository = userRepo
+        self.postRepository = postRepo
+        self.userIngredientRepository = ingredientRepo
+        self.users = supabaseService.isConfigured ? [] : userRepo.loadUsers()
+        self.currentLoginID = supabaseService.isConfigured ? nil : userRepo.loadCurrentLoginID()
+        self.userIngredientDefinitions = ingredientRepo.loadUserIngredients()
+        let formulaA = FeedFormula(
+            name: "비육전기 기본 배합",
+            stage: .fatteningEarly,
+            items: [
+                IngredientLine(name: "파쇄옥수수", definitionID: "FEED_4", amount: 10),
+                IngredientLine(name: "루핀씨드", definitionID: "FEED_91", amount: 3),
+                IngredientLine(name: "보릿겨(맥강)", definitionID: "FEED_14", amount: 4),
+                IngredientLine(name: "비지(두부박)", definitionID: "FEED_45", amount: 6),
+                IngredientLine(name: "옥수수사일리지(황숙기)", definitionID: "FEED_72", amount: 8),
+                IngredientLine(name: "볏짚(사일리지)", definitionID: "FEED_60", amount: 5),
+            ],
+            checkedAt: .now
+        )
+        let formulaB = FeedFormula(
+            name: "육성기 기본 배합",
+            stage: .growing,
+            items: [
+                IngredientLine(name: "알팔파 펠렛", definitionID: "FEED_56", amount: 5),
+                IngredientLine(name: "보리사일리지(호숙기)", definitionID: "FEED_68", amount: 6),
+                IngredientLine(name: "볏짚(사일리지)", definitionID: "FEED_60", amount: 5),
+                IngredientLine(name: "루핀씨드", definitionID: "FEED_91", amount: 2),
+                IngredientLine(name: "비트펄프", definitionID: "FEED_92", amount: 2),
+            ],
+            checkedAt: Calendar.current.date(byAdding: .day, value: -2, to: .now) ?? .now
+        )
+        let formulaC = FeedFormula(
+            name: "경기TMR 3000kg 테스트 배합",
+            stage: .fatteningEarly,
+            items: [
+                IngredientLine(name: "대두박", definitionID: "CUSTOM_SOYBEAN_MEAL", amount: 90),
+                IngredientLine(name: "루핀", definitionID: "FEED_91", amount: 90),
+                IngredientLine(name: "파쇄옥수수", definitionID: "FEED_4", amount: 125),
+                IngredientLine(name: "당밀", definitionID: "FEED_37", amount: 450),
+                IngredientLine(name: "버섯배지", definitionID: "FEED_42", amount: 60),
+                IngredientLine(name: "비지", definitionID: "FEED_45", amount: 543),
+                IngredientLine(name: "깻묵", definitionID: "FEED_26", amount: 159),
+                IngredientLine(name: "미강", definitionID: "FEED_16", amount: 300),
+                IngredientLine(name: "맥강", definitionID: "FEED_14", amount: 90),
+                IngredientLine(name: "석회석", definitionID: "FEED_109", amount: 6),
+                IngredientLine(name: "소금", definitionID: "FEED_110", amount: 6),
+                IngredientLine(name: "이스트컬쳐", definitionID: "CUSTOM_YEAST_CULTURE", amount: 1),
+                IngredientLine(name: "볏짚", definitionID: "FEED_60", amount: 1080),
+            ],
+            isTestFormula: true,
+            checkedAt: Calendar.current.date(byAdding: .hour, value: -6, to: .now) ?? .now
+        )
+        let formulaD = FeedFormula(
+            name: "엔진검증 - CP 과잉",
+            stage: .fatteningLate,
+            items: [
+                IngredientLine(name: "대두박", definitionID: "CUSTOM_SOYBEAN_MEAL", amount: 35),
+                IngredientLine(name: "루핀씨드", definitionID: "FEED_91", amount: 12),
+                IngredientLine(name: "비지(두부박)", definitionID: "FEED_45", amount: 8),
+                IngredientLine(name: "파쇄옥수수", definitionID: "FEED_4", amount: 6),
+                IngredientLine(name: "옥수수사일리지(황숙기)", definitionID: "FEED_72", amount: 10),
+                IngredientLine(name: "볏짚(사일리지)", definitionID: "FEED_60", amount: 4),
+            ],
+            isTestFormula: true,
+            checkedAt: Calendar.current.date(byAdding: .day, value: -1, to: .now) ?? .now
+        )
+        let formulaE = FeedFormula(
+            name: "엔진검증 - TDN 과잉",
+            stage: .fatteningLate,
+            items: [
+                IngredientLine(name: "파쇄옥수수", definitionID: "FEED_4", amount: 16),
+                IngredientLine(name: "옥수수(후레이크)", definitionID: "FEED_7", amount: 10),
+                IngredientLine(name: "당밀", definitionID: "FEED_37", amount: 8),
+                IngredientLine(name: "비지(두부박)", definitionID: "FEED_45", amount: 3),
+                IngredientLine(name: "옥수수사일리지(황숙기)", definitionID: "FEED_72", amount: 3),
+                IngredientLine(name: "볏짚(사일리지)", definitionID: "FEED_60", amount: 2),
+            ],
+            isTestFormula: true,
+            checkedAt: Calendar.current.date(byAdding: .day, value: -3, to: .now) ?? .now
+        )
+        let formulaF = FeedFormula(
+            name: "엔진검증 - CP 부족",
+            stage: .growing,
+            items: [
+                IngredientLine(name: "옥수수사일리지(황숙기)", definitionID: "FEED_72", amount: 12),
+                IngredientLine(name: "볏짚(사일리지)", definitionID: "FEED_60", amount: 6),
+                IngredientLine(name: "파쇄옥수수", definitionID: "FEED_4", amount: 8),
+                IngredientLine(name: "당밀", definitionID: "FEED_37", amount: 2),
+            ],
+            isTestFormula: true,
+            checkedAt: Calendar.current.date(byAdding: .day, value: -4, to: .now) ?? .now
+        )
+        let formulaG = FeedFormula(
+            name: "엔진검증 - EE 과잉 + CP 부족",
+            stage: .fatteningEarly,
+            items: [
+                IngredientLine(name: "쌀겨(생미강)", definitionID: "FEED_16", amount: 12),
+                IngredientLine(name: "파쇄옥수수", definitionID: "FEED_4", amount: 8),
+                IngredientLine(name: "옥수수사일리지(황숙기)", definitionID: "FEED_72", amount: 6),
+                IngredientLine(name: "볏짚(사일리지)", definitionID: "FEED_60", amount: 6),
+                IngredientLine(name: "당밀", definitionID: "FEED_37", amount: 2),
+            ],
+            isTestFormula: true,
+            checkedAt: Calendar.current.date(byAdding: .day, value: -5, to: .now) ?? .now
+        )
+
+        let formulaH = FeedFormula(
+            name: "농가 배합 테스트",
+            stage: .fatteningEarly,
+            items: [
+                IngredientLine(name: "제과부산물", definitionID: "FEED_48", amount: 100),
+                IngredientLine(name: "옥수수 주정박", definitionID: "FEED_33", amount: 90),
+                IngredientLine(name: "쌀겨(생미강)", definitionID: "FEED_16", amount: 60),
+                IngredientLine(name: "파쇄옥수수", definitionID: "FEED_4", amount: 125),
+                IngredientLine(name: "소맥피(밀기울)", definitionID: "FEED_212", amount: 40),
+                IngredientLine(name: "도토리박", definitionID: "FEED_38", amount: 20),
+                IngredientLine(name: "들깻묵(임자박)", definitionID: "FEED_26", amount: 15),
+                IngredientLine(name: "석회석", definitionID: "FEED_109", amount: 10),
+                IngredientLine(name: "벤토나이트", definitionID: nil, amount: 5),
+                IngredientLine(name: "소금", definitionID: "FEED_110", amount: 10),
+                IngredientLine(name: "이스트컬쳐", definitionID: "CUSTOM_YEAST_CULTURE", amount: 1),
+                IngredientLine(name: "물", definitionID: nil, amount: 70),
+                IngredientLine(name: "이탈리안라이그라스사일리지(출수기)", definitionID: "FEED_73", amount: 90),
+            ],
+            checkedAt: .now
+        )
+
+        self.formulas = [formulaA, formulaB, formulaC, formulaD, formulaE, formulaF, formulaG, formulaH]
+        self.selectedFormulaID = formulaA.id
+
+        #if DEBUG
+        let _debugFormulas = [formulaC, formulaD, formulaE, formulaF, formulaG]
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            var lines: [String] = ["DEBUG START \(Date())"]
+            for formula in _debugFormulas {
+                let run = self.analysis(for: formula)
+                lines.append(">>> [\(formula.name)]")
+                for rec in run.recommendations {
+                    let acts = rec.correctionActions.map { "\($0.type)==\($0.ingredientName) \(String(format:"%.1f",$0.amountKg))kg" }.joined(separator: " / ")
+                    lines.append("    strategy=\(rec.strategy) full=\(rec.isFullyResolved) actions=[\(acts)]")
+                }
+                if run.recommendations.first?.strategy == .noSolution { lines.append("    noSolution") }
+            }
+            lines.append("DEBUG END")
+            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let url = docs.appendingPathComponent("hanwoo_regression.txt")
+            try? lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
+        }
+        #endif
+        self.diaryEntries = [
+            DiaryEntry(
+                date: .now,
+                formulaId: formulaA.id,
+                stoolStatus: "약간 무름",
+                growthStatus: "무난",
+                nextFeedback: "옥수수 1kg 낮춰보고 변 상태 다시 보기",
+                note: "오후에는 잘 먹었지만 분변이 조금 묽었습니다. 다음 급여에서는 습식 원료 비중을 낮춰볼 예정입니다."
+            ),
+            DiaryEntry(
+                date: Calendar.current.date(byAdding: .day, value: -2, to: .now) ?? .now,
+                formulaId: formulaB.id,
+                stoolStatus: "안정",
+                growthStatus: "좋아짐",
+                nextFeedback: "조사료 유지, 오후 단백질원 1kg 보강 검토",
+                note: "섭취 반응이 안정적이고 육성기 체형이 고르게 올라오는 느낌입니다."
+            ),
+        ]
+        self.posts = supabaseService.isConfigured ? [] : postRepo.loadPosts()
+        if supabaseService.isConfigured {
+            Task {
+                await bootstrapSupabaseSession()
+            }
+        } else {
+            ensureAdminUser()
+            if posts.isEmpty {
+                posts = Self.seedPosts()
+                savePosts()
+            }
+            syncSessionFromCurrentUser()
+        }
+
+        dumpRegressionRecommendationsIfNeeded()
+    }
+
+    var usesSupabase: Bool {
+        supabaseService.isConfigured
+    }
+
+    var hasCompletedOnboarding: Bool {
+        selectedStage != nil
+    }
+
+    var currentUser: AppUser? {
+        guard let currentLoginID else { return nil }
+        return users.first(where: { $0.loginID == currentLoginID })
+    }
+
+}

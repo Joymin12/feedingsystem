@@ -14,6 +14,30 @@
 		AA0000000000000000000018 /* IngredientCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000019 /* IngredientCatalog.swift */; };
 		AA000000000000000000001A /* RecommendationViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001B /* RecommendationViews.swift */; };
 		AA000000000000000000001C /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001D /* SupabaseService.swift */; };
+		AA000000000000000000001E /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001F /* DomainModels.swift */; };
+		AA0000000000000000000020 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000021 /* DesignSystem.swift */; };
+		FE0000000000000000001000 /* Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001001 /* Formatting.swift */; };
+		FE0000000000000000001002 /* NutrientSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001003 /* NutrientSupport.swift */; };
+		FE0000000000000000001004 /* UserIngredientViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001005 /* UserIngredientViews.swift */; };
+		FE0000000000000000001006 /* IngredientPickerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001007 /* IngredientPickerViews.swift */; };
+		FE0000000000000000001008 /* AuthViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001009 /* AuthViews.swift */; };
+		FE000000000000000000100A /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE000000000000000000100B /* HomeView.swift */; };
+		FE000000000000000000100C /* AnalysisViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE000000000000000000100D /* AnalysisViews.swift */; };
+		FE000000000000000000100E /* DiaryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE000000000000000000100F /* DiaryViews.swift */; };
+		FE0000000000000000001010 /* CommunityViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001011 /* CommunityViews.swift */; };
+		FE0000000000000000001012 /* FarmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001013 /* FarmView.swift */; };
+		FE0000000000000000001014 /* RegressionSuiteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001015 /* RegressionSuiteView.swift */; };
+		FE0000000000000000001016 /* FormulaViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001017 /* FormulaViews.swift */; };
+		FE0000000000000000001018 /* PrototypeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001019 /* PrototypeStore.swift */; };
+		FE000000000000000000101A /* PrototypeStore+Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE000000000000000000101B /* PrototypeStore+Session.swift */; };
+		FE000000000000000000101C /* PrototypeStore+Formula.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE000000000000000000101D /* PrototypeStore+Formula.swift */; };
+		FE000000000000000000101E /* PrototypeStore+Ingredient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE000000000000000000101F /* PrototypeStore+Ingredient.swift */; };
+		FE0000000000000000001020 /* PrototypeStore+Community.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001021 /* PrototypeStore+Community.swift */; };
+		FE0000000000000000001022 /* PrototypeStore+Diary.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001023 /* PrototypeStore+Diary.swift */; };
+		FE0000000000000000001024 /* PrototypeStore+Regression.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001025 /* PrototypeStore+Regression.swift */; };
+		FE0000000000000000001026 /* CalculationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001027 /* CalculationEngine.swift */; };
+		FE0000000000000000001028 /* CorrectionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001029 /* CorrectionEngine.swift */; };
+		FE000000000000000000102A /* Repositories.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE000000000000000000102B /* Repositories.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +49,30 @@
 		AA0000000000000000000019 /* IngredientCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientCatalog.swift; sourceTree = "<group>"; };
 		AA000000000000000000001B /* RecommendationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationViews.swift; sourceTree = "<group>"; };
 		AA000000000000000000001D /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		AA000000000000000000001F /* DomainModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModels.swift; sourceTree = "<group>"; };
+		AA0000000000000000000021 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		FE0000000000000000001001 /* Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Formatting.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001003 /* NutrientSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NutrientSupport.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001005 /* UserIngredientViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserIngredientViews.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001007 /* IngredientPickerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IngredientPickerViews.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001009 /* AuthViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AuthViews.swift"; sourceTree = "<group>"; };
+		FE000000000000000000100B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HomeView.swift"; sourceTree = "<group>"; };
+		FE000000000000000000100D /* AnalysisViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnalysisViews.swift"; sourceTree = "<group>"; };
+		FE000000000000000000100F /* DiaryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DiaryViews.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001011 /* CommunityViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommunityViews.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001013 /* FarmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FarmView.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001015 /* RegressionSuiteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RegressionSuiteView.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001017 /* FormulaViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FormulaViews.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001019 /* PrototypeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrototypeStore.swift"; sourceTree = "<group>"; };
+		FE000000000000000000101B /* PrototypeStore+Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrototypeStore+Session.swift"; sourceTree = "<group>"; };
+		FE000000000000000000101D /* PrototypeStore+Formula.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrototypeStore+Formula.swift"; sourceTree = "<group>"; };
+		FE000000000000000000101F /* PrototypeStore+Ingredient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrototypeStore+Ingredient.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001021 /* PrototypeStore+Community.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrototypeStore+Community.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001023 /* PrototypeStore+Diary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrototypeStore+Diary.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001025 /* PrototypeStore+Regression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PrototypeStore+Regression.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001027 /* CalculationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CalculationEngine.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001029 /* CorrectionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CorrectionEngine.swift"; sourceTree = "<group>"; };
+		FE000000000000000000102B /* Repositories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Repositories.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,11 +106,35 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000007 /* HanwooPrototypeApp.swift */,
+				AA000000000000000000001F /* DomainModels.swift */,
+				AA0000000000000000000021 /* DesignSystem.swift */,
 				AA0000000000000000000016 /* PrototypeStore+CalculationEngine.swift */,
 				AA0000000000000000000017 /* PrototypeStore+CorrectionEngine.swift */,
 				AA0000000000000000000019 /* IngredientCatalog.swift */,
 				AA000000000000000000001B /* RecommendationViews.swift */,
 				AA000000000000000000001D /* SupabaseService.swift */,
+				FE0000000000000000001001 /* Formatting.swift */,
+				FE0000000000000000001003 /* NutrientSupport.swift */,
+				FE0000000000000000001005 /* UserIngredientViews.swift */,
+				FE0000000000000000001007 /* IngredientPickerViews.swift */,
+				FE0000000000000000001009 /* AuthViews.swift */,
+				FE000000000000000000100B /* HomeView.swift */,
+				FE000000000000000000100D /* AnalysisViews.swift */,
+				FE000000000000000000100F /* DiaryViews.swift */,
+				FE0000000000000000001011 /* CommunityViews.swift */,
+				FE0000000000000000001013 /* FarmView.swift */,
+				FE0000000000000000001015 /* RegressionSuiteView.swift */,
+				FE0000000000000000001017 /* FormulaViews.swift */,
+				FE0000000000000000001019 /* PrototypeStore.swift */,
+				FE000000000000000000101B /* PrototypeStore+Session.swift */,
+				FE000000000000000000101D /* PrototypeStore+Formula.swift */,
+				FE000000000000000000101F /* PrototypeStore+Ingredient.swift */,
+				FE0000000000000000001021 /* PrototypeStore+Community.swift */,
+				FE0000000000000000001023 /* PrototypeStore+Diary.swift */,
+				FE0000000000000000001025 /* PrototypeStore+Regression.swift */,
+				FE0000000000000000001027 /* CalculationEngine.swift */,
+				FE0000000000000000001029 /* CorrectionEngine.swift */,
+				FE000000000000000000102B /* Repositories.swift */,
 				AA0000000000000000000008 /* Assets.xcassets */,
 			);
 			path = HanwooPrototype;
@@ -143,6 +215,30 @@
 				AA0000000000000000000018 /* IngredientCatalog.swift in Sources */,
 				AA000000000000000000001A /* RecommendationViews.swift in Sources */,
 				AA000000000000000000001C /* SupabaseService.swift in Sources */,
+				AA000000000000000000001E /* DomainModels.swift in Sources */,
+				FE0000000000000000001000 /* Formatting.swift in Sources */,
+				FE0000000000000000001002 /* NutrientSupport.swift in Sources */,
+				FE0000000000000000001004 /* UserIngredientViews.swift in Sources */,
+				FE0000000000000000001006 /* IngredientPickerViews.swift in Sources */,
+				FE0000000000000000001008 /* AuthViews.swift in Sources */,
+				FE000000000000000000100A /* HomeView.swift in Sources */,
+				FE000000000000000000100C /* AnalysisViews.swift in Sources */,
+				FE000000000000000000100E /* DiaryViews.swift in Sources */,
+				FE0000000000000000001010 /* CommunityViews.swift in Sources */,
+				FE0000000000000000001012 /* FarmView.swift in Sources */,
+				FE0000000000000000001014 /* RegressionSuiteView.swift in Sources */,
+				FE0000000000000000001016 /* FormulaViews.swift in Sources */,
+				FE0000000000000000001018 /* PrototypeStore.swift in Sources */,
+				FE000000000000000000101A /* PrototypeStore+Session.swift in Sources */,
+				FE000000000000000000101C /* PrototypeStore+Formula.swift in Sources */,
+				FE000000000000000000101E /* PrototypeStore+Ingredient.swift in Sources */,
+				FE0000000000000000001020 /* PrototypeStore+Community.swift in Sources */,
+				FE0000000000000000001022 /* PrototypeStore+Diary.swift in Sources */,
+				FE0000000000000000001024 /* PrototypeStore+Regression.swift in Sources */,
+				FE0000000000000000001026 /* CalculationEngine.swift in Sources */,
+				FE0000000000000000001028 /* CorrectionEngine.swift in Sources */,
+				FE000000000000000000102A /* Repositories.swift in Sources */,
+				AA0000000000000000000020 /* DesignSystem.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
