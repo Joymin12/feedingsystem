@@ -9,49 +9,59 @@ struct HomeView: View {
         store.userFacingFormulas.filter { !$0.isTestFormula }.count
     }
 
+    private func heroStat(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.75))
+            Text(value)
+                .font(.headline.bold())
+                .foregroundStyle(.white)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.white.opacity(0.14))
+        )
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("현장 운영 대시보드")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(AppPalette.primary)
-                    Text(store.farmName)
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                    Text(store.selectedStage?.title ?? "단계 미선택")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-                    Text("배합 입력부터 분석, 교정안 확인, 일지 기록까지 한 흐름으로 빠르게 점검합니다.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(store.farmName)
+                                .font(.title2.bold())
+                                .foregroundStyle(.white)
+                            Text(store.selectedStage?.title ?? "단계 미선택")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.white.opacity(0.85))
+                        }
+                        Spacer()
+                        Image(systemName: "leaf.fill")
+                            .font(.system(size: 26))
+                            .foregroundStyle(.white.opacity(0.35))
+                    }
 
-                    HStack(spacing: 12) {
-                        MetricTile(
-                            title: "실제 배합",
-                            value: "\(productionFormulaCount)개",
-                            accent: AppPalette.primary
-                        )
-                        MetricTile(
-                            title: "최근 분석",
-                            value: "\(store.userFacingAnalyses.count)건",
-                            accent: AppPalette.ink
-                        )
-                        MetricTile(
-                            title: "사육일지",
-                            value: "\(store.diaryEntries.count)건",
-                            accent: AppPalette.warning
-                        )
+                    Text("배합 입력부터 판정, 증감 시뮬레이션, 교정안까지 한 흐름으로 점검합니다.")
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.85))
+
+                    HStack(spacing: 10) {
+                        heroStat(title: "실제 배합", value: "\(productionFormulaCount)개")
+                        heroStat(title: "저장 분석", value: "\(store.savedAnalyses.count)건")
+                        heroStat(title: "사육일지", value: "\(store.diaryEntries.count)건")
                     }
                 }
-                .padding(24)
+                .padding(20)
                 .background(
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(AppPalette.heroGradient)
                 )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                )
+                .shadow(color: AppPalette.primaryDeep.opacity(0.25), radius: 12, x: 0, y: 6)
 
                 SectionCard(title: "오늘의 기준", subtitle: store.selectedStage?.summary ?? "대표 단계 기준을 아직 고르지 않았습니다") {
                     Text(store.selectedStage?.criteria.feedingNote ?? "온보딩에서 대표 단계를 선택하면 기준과 설명이 함께 표시됩니다.")

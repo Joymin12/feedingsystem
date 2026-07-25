@@ -113,7 +113,7 @@ struct BlendView: View {
                         }
                     }
                     .padding()
-                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.white))
+                    .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(AppPalette.surface)).overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(AppPalette.hairline, lineWidth: 1))
 
                     if liveTotalKg <= 0 {
                         NoticeBanner(kind: .warning, message: "투입량이 0입니다. 원료별 투입량을 입력해야 분석할 수 있습니다.")

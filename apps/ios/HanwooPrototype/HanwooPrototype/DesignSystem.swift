@@ -1,18 +1,31 @@
 import SwiftUI
 
+// MARK: - 디자인 시스템
+// 출시형 비주얼 언어. 화면들은 여기 정의된 토큰·컴포넌트만 사용하므로
+// 이 파일을 바꾸면 앱 전체 룩이 함께 바뀐다.
+//
+// 원칙
+// - 배경은 차분한 중성 그레이, 콘텐츠는 흰 카드로 명확한 위계
+// - 브랜드 그린은 행동(버튼·활성 탭·강조)에만 사용
+// - 상태(부족/주의/적정/과잉)는 색 + 아이콘 + 텍스트를 항상 병기
+
 enum AppPalette {
-    static let primary = Color(red: 0.12, green: 0.51, blue: 0.28)
-    static let ink = Color(red: 0.10, green: 0.18, blue: 0.14)
-    static let warning = Color(red: 0.79, green: 0.48, blue: 0.09)
-    static let canvas = Color(red: 0.95, green: 0.96, blue: 0.92)
-    static let surface = Color.white.opacity(0.92)
-    static let surfaceMuted = Color(red: 0.96, green: 0.97, blue: 0.94)
-    static let surfaceStrong = Color(red: 0.93, green: 0.96, blue: 0.90)
+    // 브랜드
+    static let primary = Color(red: 0.07, green: 0.44, blue: 0.26)
+    static let primaryDeep = Color(red: 0.04, green: 0.30, blue: 0.18)
+    static let ink = Color(red: 0.09, green: 0.12, blue: 0.11)
+    static let warning = Color(red: 0.78, green: 0.47, blue: 0.10)
+
+    // 표면
+    static let canvas = Color(red: 0.953, green: 0.957, blue: 0.962)
+    static let surface = Color.white
+    static let surfaceMuted = Color(red: 0.965, green: 0.968, blue: 0.972)
+    static let surfaceStrong = Color(red: 0.922, green: 0.936, blue: 0.928)
+    static let hairline = Color.black.opacity(0.06)
+
+    // 히어로(홈 상단) 전용
     static let heroGradient = LinearGradient(
-        colors: [
-            Color(red: 0.83, green: 0.92, blue: 0.78),
-            Color(red: 0.96, green: 0.94, blue: 0.84)
-        ],
+        colors: [primary, primaryDeep],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
@@ -20,26 +33,32 @@ enum AppPalette {
 
 struct AppScreenBackground: View {
     var body: some View {
-        ZStack {
-            AppPalette.canvas
-            LinearGradient(
-                colors: [
-                    Color.white.opacity(0.55),
-                    Color(red: 0.89, green: 0.93, blue: 0.87).opacity(0.85)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+        AppPalette.canvas
+            .ignoresSafeArea()
+    }
+}
+
+// 카드 공통 스타일
+private struct CardSurface: ViewModifier {
+    var cornerRadius: CGFloat = 16
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(AppPalette.surface)
             )
-            Circle()
-                .fill(Color.white.opacity(0.45))
-                .frame(width: 280, height: 280)
-                .offset(x: 150, y: -240)
-            Circle()
-                .fill(AppPalette.primary.opacity(0.08))
-                .frame(width: 360, height: 360)
-                .offset(x: -180, y: 260)
-        }
-        .ignoresSafeArea()
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(AppPalette.hairline, lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+    }
+}
+
+extension View {
+    func cardSurface(cornerRadius: CGFloat = 16) -> some View {
+        modifier(CardSurface(cornerRadius: cornerRadius))
     }
 }
 
@@ -50,23 +69,21 @@ struct SectionCard<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.title3.bold())
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(AppPalette.ink)
+                if !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
             content
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(AppPalette.surface)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.65), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.04), radius: 18, x: 0, y: 10)
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardSurface()
     }
 }
 
@@ -78,14 +95,18 @@ struct QuickActionCard: View {
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: icon)
-                .font(.title2)
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(AppPalette.primary)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(AppPalette.primary.opacity(0.14)))
+                .frame(width: 42, height: 42)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(AppPalette.primary.opacity(0.10))
+                )
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.headline)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppPalette.ink)
                 Text(subtitle)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -94,17 +115,11 @@ struct QuickActionCard: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .foregroundStyle(.secondary)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
         }
-        .padding(18)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(AppPalette.surface)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.65), lineWidth: 1)
-        )
+        .padding(16)
+        .cardSurface()
     }
 }
 
@@ -120,12 +135,193 @@ struct StatusPill: View {
             Text(title)
                 .font(.caption.weight(.semibold))
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(tone.color.opacity(0.12))
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(tone.color.opacity(0.13))
         .foregroundStyle(tone.color)
         .clipShape(Capsule())
         .accessibilityLabel("\(title) 상태")
+    }
+}
+
+struct DetailRow: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.headline)
+            Text(value)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct LabeledTextField: View {
+    let title: String
+    @Binding var text: String
+    let placeholder: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+            TextField(placeholder, text: $text)
+                .textFieldStyle(.roundedBorder)
+        }
+    }
+}
+
+struct PrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .foregroundStyle(.white)
+            .padding(.vertical, 15)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(AppPalette.primary.opacity(configuration.isPressed ? 0.82 : 1))
+            )
+            .shadow(color: AppPalette.primary.opacity(0.18), radius: 8, x: 0, y: 4)
+    }
+}
+
+struct SecondaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .foregroundStyle(AppPalette.primary)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(AppPalette.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(AppPalette.primary.opacity(configuration.isPressed ? 0.35 : 0.65), lineWidth: 1.2)
+            )
+    }
+}
+
+struct NutrientBadge: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        VStack(spacing: 1) {
+            Text(label)
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(AppPalette.ink)
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(AppPalette.surfaceMuted)
+        )
+    }
+}
+
+struct MetricTile: View {
+    let title: String
+    let value: String
+    let accent: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.title3.bold())
+                .foregroundStyle(accent)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(AppPalette.surface)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(AppPalette.hairline, lineWidth: 1)
+        )
+    }
+}
+
+struct NutrientMetricCell: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.headline)
+                .foregroundStyle(AppPalette.ink)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(AppPalette.surfaceMuted)
+        )
+    }
+}
+
+struct ComparisonRow: View {
+    let title: String
+    let current: String
+    let projected: String
+    let projectedTone: StatusTone
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(current)
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+            Image(systemName: "arrow.right")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+            HStack(spacing: 6) {
+                Text(projected)
+                    .font(.caption.monospacedDigit().bold())
+                    .foregroundStyle(AppPalette.ink)
+                StatusPill(title: projectedTone.title, tone: projectedTone)
+            }
+        }
+    }
+}
+
+struct BulletLine: View {
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 6) {
+            Circle()
+                .fill(Color.secondary)
+                .frame(width: 4, height: 4)
+                .padding(.top, 6)
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 }
 
@@ -138,17 +334,18 @@ struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 36))
+                .foregroundStyle(.tertiary)
             Text(title)
                 .font(.headline)
+                .foregroundStyle(AppPalette.ink)
             Text(message)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 44)
+        .padding(.vertical, 40)
     }
 }
 
@@ -181,178 +378,17 @@ struct NoticeBanner: View {
                 .foregroundStyle(kind.color)
             Text(message)
                 .font(.footnote)
+                .foregroundStyle(AppPalette.ink.opacity(0.85))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(kind.color.opacity(0.10))
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(kind.color.opacity(0.09))
         )
-    }
-}
-
-struct SecondaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline)
-            .foregroundStyle(AppPalette.primary)
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(AppPalette.primary.opacity(configuration.isPressed ? 0.4 : 0.8), lineWidth: 1.5)
-            )
-    }
-}
-
-struct DetailRow: View {
-    let title: String
-    let value: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.headline)
-            Text(value)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-struct LabeledTextField: View {
-    let title: String
-    @Binding var text: String
-    let placeholder: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.headline)
-            TextField(placeholder, text: $text)
-                .textFieldStyle(.roundedBorder)
-        }
-    }
-}
-
-struct PrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline)
-            .foregroundStyle(.white)
-            .padding(.vertical, 16)
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(AppPalette.primary.opacity(configuration.isPressed ? 0.78 : 1))
-            )
-            .shadow(color: AppPalette.primary.opacity(0.25), radius: 14, x: 0, y: 10)
-    }
-}
-
-struct NutrientBadge: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        VStack(spacing: 1) {
-            Text(label)
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(.secondary)
-            Text(value)
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(.primary)
-        }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 4)
-        .background(RoundedRectangle(cornerRadius: 8).fill(Color(.secondarySystemBackground)))
-    }
-}
-
-struct MetricTile: View {
-    let title: String
-    let value: String
-    let accent: Color
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text(value)
-                .font(.title3.bold())
-                .foregroundStyle(accent)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.9))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(kind.color.opacity(0.18), lineWidth: 1)
         )
-    }
-}
-
-struct NutrientMetricCell: View {
-    let title: String
-    let value: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text(value)
-                .font(.headline)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(AppPalette.surfaceMuted)
-        )
-    }
-}
-
-struct ComparisonRow: View {
-    let title: String
-    let current: String
-    let projected: String
-    let projectedTone: StatusTone
-
-    var body: some View {
-        HStack {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Spacer()
-            Text(current)
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
-            Image(systemName: "arrow.right")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-            HStack(spacing: 6) {
-                Text(projected)
-                    .font(.caption.monospacedDigit().bold())
-                    .foregroundStyle(.primary)
-                StatusPill(title: projectedTone.title, tone: projectedTone)
-            }
-        }
-    }
-}
-
-struct BulletLine: View {
-    let text: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 6) {
-            Circle()
-                .fill(Color.secondary)
-                .frame(width: 4, height: 4)
-                .padding(.top, 6)
-            Text(text)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
     }
 }

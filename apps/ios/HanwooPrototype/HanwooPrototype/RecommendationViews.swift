@@ -87,7 +87,7 @@ struct AIRecommendationView: View {
                                 }
                             }
                             .padding()
-                            .background(RoundedRectangle(cornerRadius: 18).fill(Color.white))
+                            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(AppPalette.surface)).overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(AppPalette.hairline, lineWidth: 1))
                         }
                     }
                 }
