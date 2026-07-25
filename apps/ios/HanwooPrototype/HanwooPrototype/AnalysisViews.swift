@@ -140,7 +140,7 @@ struct AnalysisDetailView: View {
                     NavigationLink {
                         AIRecommendationView(formulaID: formulaID)
                     } label: {
-                        Text("추천안 보기")
+                        Text("추천안 보기 — 증감 시뮬레이션")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
@@ -149,7 +149,7 @@ struct AnalysisDetailView: View {
                         SimulationWorkspaceView(formula: formula)
                             .environmentObject(store)
                     } label: {
-                        Text("증감 시뮬레이션 열기")
+                        Text("직접 증감해보기")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(SecondaryButtonStyle())
