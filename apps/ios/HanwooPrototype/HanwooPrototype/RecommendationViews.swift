@@ -108,7 +108,31 @@ struct AIRecommendationView: View {
 
                 Divider()
                 costRow(recommendation: recommendation, formula: formula)
+
+                // 증량 원료 중 사양학 사용수준 주의사항이 있는 것만 안내
+                let notes = usageNotes(for: increases)
+                if !notes.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(notes, id: \.self) { note in
+                            NoticeBanner(kind: .info, message: note)
+                        }
+                    }
+                    .padding(.top, 4)
+                }
             }
+        }
+    }
+
+    // 농사로 한우 사용수준 원문 기반 안내. 엔진은 이 상한 안에서만 증감하지만,
+    // 사용자가 배경을 알 수 있도록 문구로도 보여준다.
+    private func usageNotes(for increases: [CorrectionAction]) -> [String] {
+        var seen: Set<String> = []
+        return increases.compactMap { action -> String? in
+            guard let id = action.ingredientID,
+                  let limit = IngredientUsageLimits.limit(for: id),
+                  !seen.contains(limit.useLevel) else { return nil }
+            seen.insert(limit.useLevel)
+            return "\(limit.name): \(limit.useLevel)"
         }
     }
 

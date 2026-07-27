@@ -1,0 +1,212 @@
+{
+  "source": "농촌진흥청 농사로 농식품부산물영양정보 (축종 필터: 한우, sLvstckSeCode=426001)",
+  "url": "https://www.nongsaro.go.kr/portal/ps/psz/psza/feedContentMain.ps?menuId=PS04202",
+  "collectedAt": "2026-07-26",
+  "note": "USE_LEVEL_ATPN_CN(사용수준) 원문과, 그중 수치화 가능한 항목만 maxRatioOfTotal/maxKgPerDay로 해석한 값. 해석 불가한 서술형은 advisoryOnly=true로 두고 화면 안내 문구로만 쓴다. 비율 기준(basis)이 '농후사료'인 경우 배합 전체 기준과 다르므로 별도 표기한다.",
+  "items": [
+    {
+      "name": "채종박",
+      "feedNo": 208,
+      "catalogID": "FEED_208",
+      "maxRatioOfTotal": 0.07,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "반추동물 사료에 7%이내로 제한하는 것이 좋다. 갑상선 비대물질을 함유하고 있어 가축의 생산성이 떨어짐"
+    },
+    {
+      "name": "주정박",
+      "feedNo": 210,
+      "catalogID": "FEED_210",
+      "maxRatioOfTotal": 0.05,
+      "basis": "concentrate",
+      "advisoryOnly": false,
+      "useLevel": "다량 급여시 에너지가가 낮아지고 기호성이 나빠짐 농후사료의 5%이하 정도만 배합하는 것이 좋음"
+    },
+    {
+      "name": "미강",
+      "feedNo": 216,
+      "catalogID": "FEED_216",
+      "maxRatioOfTotal": 0.10,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "농후사료의 20~30% 범위로 급여 비육우에 다량 급여시 연지방 축적 및 체지방 황색화. 비육용 사료는 적합하지 않으며, 10% 이내로 사용.",
+      "interpretation": "비육 목적 앱 특성상 보수적으로 '10% 이내' 기준을 채택"
+    },
+    {
+      "name": "맥주박",
+      "feedNo": 218,
+      "catalogID": "FEED_218",
+      "maxRatioOfTotal": 0.10,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "생후 4개월 미만인 경우 급여 하지 않는 것이 좋음 생후 4개월에서 초산까지 20%미만 급여 비육 후기사료 급여시 섭취량이 떨어 질 수 있어 10%이내로 사용하는 것이 좋다.",
+      "interpretation": "비육 후기 기준 10% 채택"
+    },
+    {
+      "name": "낙화생피",
+      "feedNo": 202,
+      "catalogID": "FEED_202",
+      "maxRatioOfTotal": 0.15,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "체지방을 연화시키는 현상이 있어 사료의 15%이상은 사용하지 않는 것이 좋다."
+    },
+    {
+      "name": "감귤박",
+      "feedNo": 223,
+      "catalogID": "FEED_223",
+      "maxRatioOfTotal": 0.15,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "고수분을 함유하고 있기 때문에 저장에 주의 비육우에 15%이내로 사용이 가능하다."
+    },
+    {
+      "name": "사과박",
+      "feedNo": 213,
+      "catalogID": "FEED_213",
+      "maxRatioOfTotal": 0.15,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "비육우의 적정 급여량은 10~15%수준이다. 비단백태 질소화합물이 보충된 사과박을 임신우에게 급여할때 송아지 사산, 난산 또는 기형 등의 발생율 증가를 초래 할 수 있음. 고수분을 함유하고 있어 저장에 주의 요망"
+    },
+    {
+      "name": "아마박",
+      "feedNo": 201,
+      "catalogID": "FEED_201",
+      "maxRatioOfTotal": 0.10,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "열처리하지 않은 경우 청산(KCN)이 함유되어 있고, 다량 급여 시, 지방융점이 낮은 연지방이 합성되어 도체품질이 떨어지는 경향이 있다. 반추동물에는 5∼10%까지 배합가능하다."
+    },
+    {
+      "name": "루핀",
+      "feedNo": 219,
+      "catalogID": "FEED_219",
+      "maxRatioOfTotal": 0.10,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "10%정도 사용이 가능"
+    },
+    {
+      "name": "들깻묵(임자박)",
+      "feedNo": 220,
+      "catalogID": "FEED_220",
+      "maxRatioOfTotal": 0.10,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "10%정도 사용이 가능 하며 대두박의 12%까지 대체가 가능하다."
+    },
+    {
+      "name": "장유박",
+      "feedNo": 204,
+      "catalogID": "FEED_204",
+      "maxRatioOfTotal": 0.10,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "염분이 약 7%까지 들어 있으므로 사료배합시 유의하야여 한다. 생박형태로는 곰팡이에 의해 썩기 쉽기 때문에 주의 해야 한다. 사용범위는 젖소에서 10%정도 사용되고 있다.",
+      "interpretation": "원문은 젖소 기준이나 염분 제한 취지를 반영해 10% 적용"
+    },
+    {
+      "name": "소맥피(밀기울)",
+      "feedNo": 212,
+      "catalogID": "FEED_212",
+      "maxRatioOfTotal": 0.30,
+      "basis": "concentrate",
+      "advisoryOnly": false,
+      "useLevel": "젖소의 농후사료에 25~30% 정도 사용. 번식우나 육성우 등에 급여. 비육우에 급여시 고단백질 및 고에너지 사료와 배합하여 급여."
+    },
+    {
+      "name": "대두박",
+      "feedNo": 222,
+      "catalogID": "FEED_222",
+      "maxRatioOfTotal": 0.50,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "반추동물용 사료에 50%까지 사용가능 송아지의 이유사료로도 탈지분유와 대등하게 사용가능"
+    },
+    {
+      "name": "참깻묵(호마박)",
+      "feedNo": 209,
+      "catalogID": "FEED_209",
+      "advisoryOnly": true,
+      "useLevel": "라이신 함량이 낮아 대두박과 병용해서 사용. 대두박 30%와 대체가능하나 과다급여 시 연지방 생성."
+    },
+    {
+      "name": "비지",
+      "feedNo": 215,
+      "catalogID": "FEED_215",
+      "maxRatioOfTotal": 0.40,
+      "basis": "total",
+      "advisoryOnly": false,
+      "useLevel": "비지에 옥분, 당밀, 균제를 혼합한 발효사료를 전체 사료의 40%수준에서 거세한우 비육우 급여시 증체 성적은 양호한 편",
+      "interpretation": "원문은 '비지 발효사료' 기준 40%. 생비지 단독 다량 급여는 연변 위험이 있어 상한으로만 사용하고, 화면에 주의 문구를 함께 노출한다."
+    },
+    {
+      "name": "면실박",
+      "feedNo": 217,
+      "catalogID": "FEED_217",
+      "maxKgPerHeadPerDay": 0.2,
+      "advisoryOnly": false,
+      "useLevel": "비육우는 1일 0.2kg 이하로 급여. 탈고시폴 처리된 면실박은 양질 조사료와 함께 다량 급여 가능.",
+      "interpretation": "두수 기반 제한이라 배합 총량 비율로 직접 환산 불가. 두수 입력 기능 추가 전까지 안내 문구로 사용"
+    },
+    {
+      "name": "비트펄프",
+      "feedNo": 214,
+      "catalogID": "FEED_214",
+      "maxKgPerHeadPerDay": 3.0,
+      "advisoryOnly": false,
+      "useLevel": "1일 3kg이내로 급여하여 건물 섭취량이 제한 받지 않는다."
+    },
+    {
+      "name": "대두피",
+      "feedNo": 221,
+      "catalogID": "FEED_221",
+      "maxKgPerHeadPerDay": 5.4,
+      "advisoryOnly": false,
+      "useLevel": "1일 최대 5.4kg급여가 가능하다."
+    },
+    {
+      "name": "엿밥",
+      "feedNo": 200,
+      "catalogID": "FEED_200",
+      "advisoryOnly": true,
+      "useLevel": "고수분 고영양원으로 변질에 주의하고, TMR 배합시 다양한 모양의 덩어리를 잘게 부수어 주어야 한다."
+    },
+    {
+      "name": "야자박",
+      "feedNo": 203,
+      "catalogID": "FEED_203",
+      "advisoryOnly": true,
+      "useLevel": "주산지가 열대지방이기 때문에 잔류지방의 변질과 아플라톡신의 오염에 주의해야 한다."
+    },
+    {
+      "name": "맥아근",
+      "feedNo": 205,
+      "catalogID": "FEED_205",
+      "advisoryOnly": true,
+      "useLevel": "미지성장인자(UFG)가 들어 있다. 쓴맛을 내 사료의 기호성이 떨어지므로 다른사료와 혼합하여야 한다."
+    },
+    {
+      "name": "맥강",
+      "feedNo": 206,
+      "catalogID": "FEED_206",
+      "advisoryOnly": true,
+      "useLevel": "맥강은 주로 돼지와 육우의 사료로 이용되며, 전체 사료의 단백질이나 에너지가 낮이 않다면 육질을 좋게 한다는 연구결과가 있음 맥강은 도정과정에 따라 다르므로 사용하기 전에 시료분석을 해야한다."
+    },
+    {
+      "name": "커피박",
+      "feedNo": 207,
+      "catalogID": "FEED_207",
+      "advisoryOnly": true,
+      "useLevel": "기호성이 낮고 중독현상도 있어서 가축의 사료에 다량으로 사용시 유의해야 한다."
+    },
+    {
+      "name": "옥수수",
+      "feedNo": 211,
+      "catalogID": "FEED_211",
+      "advisoryOnly": true,
+      "useLevel": "(농사로 한우 기준 사용수준 미기재)"
+    }
+  ]
+}

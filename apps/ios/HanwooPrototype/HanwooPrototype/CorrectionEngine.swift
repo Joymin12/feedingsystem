@@ -217,7 +217,8 @@ struct CorrectionEngine {
             }),
             definitionIDs: Dictionary(uniqueKeysWithValues: adjustable.compactMap { index in
                 base.items[index].definitionID.map { (index, $0) }
-            })
+            }),
+            usageMaxKg: usageLimitKgByIndex(formula: base, adjustable: adjustable)
         )
 
         guard let startScore = score(base, context: context) else { return nil }
@@ -324,6 +325,32 @@ struct CorrectionEngine {
         )
     }
 
+    // 농사로 한우 사용수준을 이 배합의 총량 기준 최대 kg으로 환산한다.
+    // 총량은 최종 정규화로 보존되므로 원 배합 총량을 기준으로 삼는다.
+    private func usageLimitKgByIndex(formula: FeedFormula, adjustable: [Int]) -> [Int: Double] {
+        let totalKg = formula.items.reduce(0.0) { $0 + asFedKg(for: $1) }
+        let concentrateKg = formula.items.reduce(0.0) { partial, item in
+            guard let defID = item.definitionID,
+                  let definition = provider.ingredientDefinition(id: defID),
+                  definition.category == .concentrate || definition.category == .agriByproduct
+            else { return partial }
+            return partial + asFedKg(for: item)
+        }
+        guard totalKg > 0 else { return [:] }
+
+        var result: [Int: Double] = [:]
+        for index in adjustable {
+            guard let defID = formula.items[index].definitionID,
+                  let maxKg = IngredientUsageLimits.maxKg(
+                      for: defID,
+                      totalAsFedKg: totalKg,
+                      concentrateAsFedKg: concentrateKg
+                  ) else { continue }
+            result[index] = maxKg
+        }
+        return result
+    }
+
     // 최적화 탐색에 쓰는 불변 문맥: 조정 대상, 기준표, 사용자 제약, 원래 투입량, 원료 단가.
     private struct OptimizeContext {
         let adjustable: [Int]
@@ -332,6 +359,8 @@ struct CorrectionEngine {
         let originalAmounts: [Int: Double]
         let prices: [Int: Double]
         let definitionIDs: [Int: String]
+        /// 농사로 한우 사용수준을 배합 총량 기준 kg으로 환산한 상한
+        let usageMaxKg: [Int: Double]
     }
 
     // 목적함수: 가중 목표 이탈(totalCoreGap) + 선택적 비용 페널티.
@@ -351,10 +380,16 @@ struct CorrectionEngine {
         return value
     }
 
-    // 하드 제약 적용: 원료별 최소/최대 kg, 원래 양 대비 최대 조정 폭. 음수 방지 포함.
+    // 하드 제약 적용: 사용수준 상한, 원료별 최소/최대 kg, 최대 조정 폭. 음수 방지 포함.
     private func clampKg(_ kg: Double, index: Int, context: OptimizeContext) -> Double {
         var value = max(0, kg)
         let constraints = context.constraints
+
+        // 사양학 사용수준(농사로 한우 기준) 상한. 현재 투입량이 이미 상한을 넘고 있으면
+        // 사용자 입력을 강제로 깎지 않고 현재량까지는 허용한다(감량은 여전히 가능).
+        if let usageMax = context.usageMaxKg[index] {
+            value = min(value, max(usageMax, context.originalAmounts[index] ?? 0))
+        }
         if let original = context.originalAmounts[index], let ratio = constraints.maxAdjustmentRatio {
             let lower = original * max(0, 1 - ratio)
             let upper = original * (1 + ratio)

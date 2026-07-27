@@ -46,6 +46,7 @@
 		TE00000000000000000000B5 /* RepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TE00000000000000000000F5 /* RepositoryTests.swift */; };
 		FE0000000000000000001030 /* SettingsHelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001031 /* SettingsHelpView.swift */; };
 		FE0000000000000000001032 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001033 /* ExportService.swift */; };
+		FE000000000000000000102E /* IngredientUsageLimits.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE000000000000000000102F /* IngredientUsageLimits.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -100,6 +101,7 @@
 		TE00000000000000000000E0 /* HanwooPrototypeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HanwooPrototypeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE0000000000000000001031 /* SettingsHelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SettingsHelpView.swift"; sourceTree = "<group>"; };
 		FE0000000000000000001033 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ExportService.swift"; sourceTree = "<group>"; };
+		FE000000000000000000102F /* IngredientUsageLimits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IngredientUsageLimits.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +176,7 @@
 				FE000000000000000000102D /* RecommendationExplanation.swift */,
 				FE0000000000000000001031 /* SettingsHelpView.swift */,
 				FE0000000000000000001033 /* ExportService.swift */,
+				FE000000000000000000102F /* IngredientUsageLimits.swift */,
 				AA0000000000000000000008 /* Assets.xcassets */,
 			);
 			path = HanwooPrototype;
@@ -314,6 +317,7 @@
 				FE000000000000000000102C /* RecommendationExplanation.swift in Sources */,
 				FE0000000000000000001030 /* SettingsHelpView.swift in Sources */,
 				FE0000000000000000001032 /* ExportService.swift in Sources */,
+				FE000000000000000000102E /* IngredientUsageLimits.swift in Sources */,
 				AA0000000000000000000020 /* DesignSystem.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
