@@ -110,7 +110,7 @@ struct AIRecommendationView: View {
                 costRow(recommendation: recommendation, formula: formula)
 
                 // 증량 원료 중 사양학 사용수준 주의사항이 있는 것만 안내
-                let notes = usageNotes(for: increases)
+                let notes = usageNotes(for: increases, formula: formula)
                 if !notes.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(notes, id: \.self) { note in
@@ -123,15 +123,45 @@ struct AIRecommendationView: View {
         }
     }
 
-    // 농사로 한우 사용수준 원문 기반 안내. 엔진은 이 상한 안에서만 증감하지만,
-    // 사용자가 배경을 알 수 있도록 문구로도 보여준다.
-    private func usageNotes(for increases: [CorrectionAction]) -> [String] {
+    // 농사로 한우 사용수준 안내.
+    // 상한 %를 이 배합의 실제 kg으로 환산해 "조정 후 ○kg — 최대 △kg 이내"로 보여준다.
+    // 환산은 산수이므로 코드가 직접 계산한다(AI에 위임하지 않음). 상한은 목표가 아니라
+    // '넘지 말 것'이므로 권고량이 아닌 범위 확인 문구로 표현한다.
+    private func usageNotes(for increases: [CorrectionAction], formula: FeedFormula) -> [String] {
+        let totalKg = formula.items.reduce(0.0) { $0 + asFedKg(for: $1) }
+        let concentrateKg = formula.items.reduce(0.0) { partial, item in
+            guard let defID = item.definitionID,
+                  let definition = store.ingredientDefinition(id: defID),
+                  definition.category == .concentrate || definition.category == .agriByproduct
+            else { return partial }
+            return partial + asFedKg(for: item)
+        }
+
         var seen: Set<String> = []
         return increases.compactMap { action -> String? in
             guard let id = action.ingredientID,
                   let limit = IngredientUsageLimits.limit(for: id),
-                  !seen.contains(limit.useLevel) else { return nil }
-            seen.insert(limit.useLevel)
+                  !seen.contains(limit.name) else { return nil }
+            seen.insert(limit.name)
+
+            let originalKg = formula.items
+                .filter { $0.definitionID == id }
+                .reduce(0.0) { $0 + asFedKg(for: $1) }
+            let afterKg = originalKg + action.amountKg
+
+            if let maxKg = IngredientUsageLimits.maxKg(
+                for: id, totalAsFedKg: totalKg, concentrateAsFedKg: concentrateKg
+            ) {
+                let basisLabel: String
+                if let ratio = limit.ratioOfTotal {
+                    basisLabel = "총량의 \(numberString(ratio * 100))%"
+                } else if let ratio = limit.ratioOfConcentrate {
+                    basisLabel = "농후사료의 \(numberString(ratio * 100))%"
+                } else {
+                    basisLabel = "사용수준"
+                }
+                return "\(limit.name): 조정 후 \(numberString(afterKg))kg — 사용수준 상한(\(basisLabel) = 최대 \(numberString(maxKg))kg) 이내입니다. \(limit.useLevel)"
+            }
             return "\(limit.name): \(limit.useLevel)"
         }
     }
