@@ -100,10 +100,10 @@ struct AIRecommendationView: View {
         ) {
             VStack(spacing: 10) {
                 ForEach(increases) { action in
-                    actionRow(action, isIncrease: true)
+                    actionRow(action, isIncrease: true, formula: formula)
                 }
                 ForEach(decreases) { action in
-                    actionRow(action, isIncrease: false)
+                    actionRow(action, isIncrease: false, formula: formula)
                 }
 
                 Divider()
@@ -150,19 +150,19 @@ struct AIRecommendationView: View {
             let afterKg = originalKg + action.amountKg
 
             if let maxKg = IngredientUsageLimits.maxKg(
-                for: id, totalAsFedKg: totalKg, concentrateAsFedKg: concentrateKg
+                for: id, stage: formula.stage, totalAsFedKg: totalKg, concentrateAsFedKg: concentrateKg
             ) {
                 let basisLabel: String
-                if let ratio = limit.ratioOfTotal {
+                if let ratio = limit.ratioOfTotal(for: formula.stage) {
                     basisLabel = "총량의 \(numberString(ratio * 100))%"
                 } else if let ratio = limit.ratioOfConcentrate {
                     basisLabel = "농후사료의 \(numberString(ratio * 100))%"
                 } else {
                     basisLabel = "사용수준"
                 }
-                return "\(limit.name): 조정 후 \(numberString(afterKg))kg — 사용수준 상한(\(basisLabel) = 최대 \(numberString(maxKg))kg) 이내입니다. \(limit.useLevel)"
+                return "\(limit.name): 조정 후 \(numberString(afterKg))kg — \(formula.stage.title) 사용수준 상한(\(basisLabel) = 최대 \(numberString(maxKg))kg) 이내입니다. \(limit.useLevel(for: formula.stage))"
             }
-            return "\(limit.name): \(limit.useLevel)"
+            return "\(limit.name): \(limit.useLevel(for: formula.stage))"
         }
     }
 
@@ -202,20 +202,36 @@ struct AIRecommendationView: View {
         }
     }
 
-    private func actionRow(_ action: CorrectionAction, isIncrease: Bool) -> some View {
-        HStack(spacing: 10) {
+    // 증감량뿐 아니라 "기존 → 적용 후" 실제 투입량을 함께 보여준다.
+    // 현장에서 저울에 올릴 최종 kg이 바로 보여야 실행 가능하다.
+    private func actionRow(_ action: CorrectionAction, isIncrease: Bool, formula: FeedFormula) -> some View {
+        let beforeKg = formula.items
+            .filter { $0.definitionID != nil && $0.definitionID == action.ingredientID }
+            .reduce(0.0) { $0 + asFedKg(for: $1) }
+        let afterKg = isIncrease ? beforeKg + action.amountKg : max(0, beforeKg - action.amountKg)
+        let accent = isIncrease ? AppPalette.primary : AppPalette.warning
+
+        return HStack(spacing: 10) {
             Image(systemName: isIncrease ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
                 .font(.title3)
-                .foregroundStyle(isIncrease ? AppPalette.primary : AppPalette.warning)
-            Text(action.ingredientName)
-                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(accent)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(action.ingredientName)
+                    .font(.subheadline.weight(.semibold))
+                Text("\(numberString(beforeKg))kg → \(numberString(afterKg))kg")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
             Spacer()
+
             Text("\(isIncrease ? "+" : "−")\(numberString(action.amountKg))kg")
                 .font(.headline.monospacedDigit())
-                .foregroundStyle(isIncrease ? AppPalette.primary : AppPalette.warning)
+                .foregroundStyle(accent)
         }
         .padding(.vertical, 2)
-        .accessibilityLabel("\(action.ingredientName) \(isIncrease ? "증량" : "감량") \(numberString(action.amountKg))킬로그램")
+        .accessibilityLabel("\(action.ingredientName) \(numberString(beforeKg))킬로그램에서 \(numberString(afterKg))킬로그램으로 \(isIncrease ? "증량" : "감량")")
     }
 
     // MARK: 결과 카드 — "그러면 이렇게 적정이 됩니다"

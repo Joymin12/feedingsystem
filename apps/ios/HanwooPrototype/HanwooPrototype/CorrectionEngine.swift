@@ -218,7 +218,7 @@ struct CorrectionEngine {
             definitionIDs: Dictionary(uniqueKeysWithValues: adjustable.compactMap { index in
                 base.items[index].definitionID.map { (index, $0) }
             }),
-            usageMaxKg: usageLimitKgByIndex(formula: base, adjustable: adjustable)
+            usageMaxKg: usageLimitKgByIndex(formula: base, stage: stage, adjustable: adjustable)
         )
 
         guard let startScore = score(base, context: context) else { return nil }
@@ -327,7 +327,7 @@ struct CorrectionEngine {
 
     // 농사로 한우 사용수준을 이 배합의 총량 기준 최대 kg으로 환산한다.
     // 총량은 최종 정규화로 보존되므로 원 배합 총량을 기준으로 삼는다.
-    private func usageLimitKgByIndex(formula: FeedFormula, adjustable: [Int]) -> [Int: Double] {
+    private func usageLimitKgByIndex(formula: FeedFormula, stage: FarmStage, adjustable: [Int]) -> [Int: Double] {
         let totalKg = formula.items.reduce(0.0) { $0 + asFedKg(for: $1) }
         let concentrateKg = formula.items.reduce(0.0) { partial, item in
             guard let defID = item.definitionID,
@@ -343,6 +343,7 @@ struct CorrectionEngine {
             guard let defID = formula.items[index].definitionID,
                   let maxKg = IngredientUsageLimits.maxKg(
                       for: defID,
+                      stage: stage,
                       totalAsFedKg: totalKg,
                       concentrateAsFedKg: concentrateKg
                   ) else { continue }

@@ -24,6 +24,22 @@ struct IngredientUsageLimit {
     var ratioOfConcentrate: Double?
     /// 원문 사용수준 (화면 안내용)
     let useLevel: String
+    /// 성장단계별로 상한이 다른 경우의 재정의.
+    /// 농사로 원문이 월령·사육단계를 구분해 서술한 원료에만 채운다.
+    /// 예) 맥주박 "생후 4개월~초산까지 20% 미만, 비육 후기 10% 이내"
+    var stageOverrides: [FarmStage: Double] = [:]
+    /// 단계별 안내 문구 재정의 (없으면 useLevel 사용)
+    var stageNotes: [FarmStage: String] = [:]
+
+    /// 해당 성장단계에서 적용할 총량 대비 상한
+    func ratioOfTotal(for stage: FarmStage) -> Double? {
+        stageOverrides[stage] ?? ratioOfTotal
+    }
+
+    /// 해당 성장단계에서 보여줄 안내 문구
+    func useLevel(for stage: FarmStage) -> String {
+        stageNotes[stage] ?? useLevel
+    }
 }
 
 enum IngredientUsageLimits {
@@ -33,11 +49,28 @@ enum IngredientUsageLimits {
         .init(ingredientID: "FEED_208", name: "채종박", ratioOfTotal: 0.07, ratioOfConcentrate: nil,
               useLevel: "반추동물 사료에 7% 이내로 제한하는 것이 좋습니다."),
         .init(ingredientID: "FEED_216", name: "미강", ratioOfTotal: 0.10, ratioOfConcentrate: nil,
-              useLevel: "비육우에 다량 급여 시 연지방 축적·체지방 황색화 우려가 있어 10% 이내 사용을 권장합니다."),
+              useLevel: "비육우에 다량 급여 시 연지방 축적·체지방 황색화 우려가 있어 10% 이내 사용을 권장합니다.",
+              stageOverrides: [.growing: 0.20],
+              stageNotes: [
+                  .growing: "육성기에는 농후사료의 20~30% 범위로 급여할 수 있습니다. 비육 단계에서는 연지방 우려로 10% 이내로 낮춰야 합니다."
+              ]),
         .init(ingredientID: "FEED_16", name: "쌀겨(생미강)", ratioOfTotal: 0.10, ratioOfConcentrate: nil,
-              useLevel: "비육우에 다량 급여 시 연지방 축적·체지방 황색화 우려가 있어 10% 이내 사용을 권장합니다."),
+              useLevel: "비육우에 다량 급여 시 연지방 축적·체지방 황색화 우려가 있어 10% 이내 사용을 권장합니다.",
+              stageOverrides: [.growing: 0.20],
+              stageNotes: [
+                  .growing: "육성기에는 농후사료의 20~30% 범위로 급여할 수 있습니다. 비육 단계에서는 연지방 우려로 10% 이내로 낮춰야 합니다."
+              ]),
+        // 맥주박: 원문이 사육단계를 구분한다.
+        // "생후 4개월~초산까지 20% 미만" → 육성기·비육전기 20%
+        // "비육 후기 급여 시 섭취량이 떨어질 수 있어 10% 이내" → 비육후기 10%
         .init(ingredientID: "FEED_218", name: "맥주박", ratioOfTotal: 0.10, ratioOfConcentrate: nil,
-              useLevel: "비육 후기에는 섭취량 저하 우려가 있어 10% 이내 사용을 권장합니다. 생후 4개월 미만은 급여하지 않는 것이 좋습니다."),
+              useLevel: "생후 4개월 이후 20% 미만으로 급여합니다. 비육 후기에는 섭취량 저하 우려가 있어 10% 이내를 권장합니다.",
+              stageOverrides: [.growing: 0.20, .fatteningEarly: 0.20, .fatteningLate: 0.10],
+              stageNotes: [
+                  .growing: "생후 4개월 이후 20% 미만으로 급여합니다. 생후 4개월 미만에는 급여하지 않는 것이 좋습니다.",
+                  .fatteningEarly: "생후 4개월 이후 20% 미만으로 급여합니다.",
+                  .fatteningLate: "비육 후기에는 섭취량이 떨어질 수 있어 10% 이내 사용을 권장합니다."
+              ]),
         .init(ingredientID: "FEED_201", name: "아마박", ratioOfTotal: 0.10, ratioOfConcentrate: nil,
               useLevel: "반추동물에는 5~10%까지 배합 가능합니다. 다량 급여 시 연지방이 생겨 도체품질이 떨어질 수 있습니다."),
         .init(ingredientID: "FEED_219", name: "루핀", ratioOfTotal: 0.10, ratioOfConcentrate: nil,
@@ -81,16 +114,18 @@ enum IngredientUsageLimits {
 
     /// 사용수준을 배합 기준 최대 kg으로 환산한다.
     /// - Parameters:
+    ///   - stage: 성장단계. 원문이 사육단계를 구분한 원료는 단계별 상한이 적용된다.
     ///   - totalAsFedKg: 배합 총 원물 kg
     ///   - concentrateAsFedKg: 농후사료 합계 원물 kg
     static func maxKg(
         for ingredientID: String,
+        stage: FarmStage,
         totalAsFedKg: Double,
         concentrateAsFedKg: Double
     ) -> Double? {
         guard let limit = byID[ingredientID] else { return nil }
         var candidates: [Double] = []
-        if let ratio = limit.ratioOfTotal { candidates.append(totalAsFedKg * ratio) }
+        if let ratio = limit.ratioOfTotal(for: stage) { candidates.append(totalAsFedKg * ratio) }
         if let ratio = limit.ratioOfConcentrate { candidates.append(concentrateAsFedKg * ratio) }
         return candidates.min()
     }
