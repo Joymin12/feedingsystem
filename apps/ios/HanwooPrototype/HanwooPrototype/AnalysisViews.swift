@@ -12,36 +12,54 @@ struct AnalysisDetailView: View {
             if let formula = store.formula(for: formulaID) {
                 let analysis = store.analysis(for: formula)
 
-                VStack(alignment: .leading, spacing: 20) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(alignment: .center, spacing: 10) {
-                            Text(formula.name)
-                                .font(.system(size: 30, weight: .bold, design: .rounded))
-                            if formula.isTestFormula {
-                                StatusPill(title: "테스트 배합", tone: .caution)
-                            }
+                let attention = analysis.statuses.filter { $0.tone != .adequate }
+                let satisfied = analysis.statuses.filter { $0.tone == .adequate }
+
+                VStack(alignment: .leading, spacing: 0) {
+                    // 이 화면의 핵심 숫자 = 손봐야 할 항목 수
+                    HStack(alignment: .firstTextBaseline, spacing: 2) {
+                        Text("\(attention.count)")
+                            .font(.system(size: 34, weight: .bold))
+                            .monospacedDigit()
+                            .foregroundStyle(AppPalette.ink)
+                        Text("/\(analysis.statuses.count) 항목 확인 필요")
+                            .font(.system(size: 19, weight: .semibold))
+                            .foregroundStyle(AppPalette.subtle)
+                    }
+
+                    Text("\(formula.name) · \(formula.stage.title) 기준")
+                        .font(.footnote)
+                        .foregroundStyle(AppPalette.subtle)
+                        .padding(.top, 8)
+
+                    if !attention.isEmpty {
+                        Text("확인 필요")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(AppPalette.subtle)
+                            .padding(.top, 28)
+                            .padding(.bottom, 12)
+
+                        HairlineDivider()
+                        ForEach(attention) { status in
+                            nutrientRow(status)
+                            HairlineDivider()
                         }
-
-                        Text(dateTimeString(analysis.checkedAt))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-
-                        Text(analysis.summary)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
                     }
 
-                    HStack(spacing: 12) {
-                        MetricTile(title: "수분", value: percentString(analysis.metrics.moisturePct), accent: AppPalette.primary)
-                        MetricTile(title: "CP", value: percentString(analysis.metrics.cpPctDm), accent: AppPalette.ink)
-                        MetricTile(title: "TDN", value: percentString(analysis.metrics.tdnPctDm), accent: AppPalette.warning)
-                    }
+                    if !satisfied.isEmpty {
+                        Text("기준 만족 \(satisfied.count)")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(AppPalette.subtle)
+                            .padding(.top, 28)
+                            .padding(.bottom, 12)
 
-                    SectionCard(title: "영양소 판정", subtitle: "건물(DM) 기준") {
-                        VStack(spacing: 0) {
-                            ForEach(Array(analysis.statuses.enumerated()), id: \.element.id) { index, status in
-                                if index > 0 { Divider() }
-                                nutrientRow(status)
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 110), spacing: 8)],
+                            alignment: .leading,
+                            spacing: 8
+                        ) {
+                            ForEach(satisfied) { status in
+                                ValueChip(name: status.nutrient, value: status.currentValue)
                             }
                         }
                     }
@@ -49,12 +67,12 @@ struct AnalysisDetailView: View {
                     NavigationLink {
                         AIRecommendationView(formulaID: formulaID)
                     } label: {
-                        Text("추천안 보기 — 증감 시뮬레이션")
+                        Text("교정안 보기")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
+                    .padding(.top, 32)
 
-                    // 엔진이 찾아주는 안과 별개로, 직접 밀고 당겨보는 경로.
                     NavigationLink {
                         AdjustmentSliderView(formulaID: formulaID)
                     } label: {
@@ -62,18 +80,23 @@ struct AnalysisDetailView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(SecondaryButtonStyle())
+                    .padding(.top, 10)
 
                     Button {
                         store.saveAnalysisSnapshot(for: formula)
                         didSaveSnapshot = true
                     } label: {
-                        Text(didSaveSnapshot ? "저장됨 ✓" : "이 분석 저장")
+                        Text(didSaveSnapshot ? "저장됨" : "이 분석 저장")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(SecondaryButtonStyle())
                     .disabled(didSaveSnapshot)
+                    .padding(.top, 10)
                 }
-                .padding(20)
+                .padding(.horizontal, 22)
+                .padding(.top, 8)
+                .padding(.bottom, 28)
+
                 .task {
                     // 사용 중인 원료 목록만 서버에 남긴다. 투입량은 보내지 않는다.
                     // 실패해도 화면 동작에는 영향이 없다.
@@ -88,29 +111,24 @@ struct AnalysisDetailView: View {
     // MARK: 영양소 한 줄
 
     private func nutrientRow(_ status: NutrientStatus) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(status.nutrient)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppPalette.ink)
-                    .frame(width: 58, alignment: .leading)
+        HStack(spacing: 10) {
+            Text(status.nutrient)
+                .font(.system(size: 15))
+                .foregroundStyle(AppPalette.ink)
 
-                Text(status.currentValue)
-                    .font(.title3.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(AppPalette.ink)
+            Spacer(minLength: 8)
 
-                Spacer()
+            Text(status.currentValue)
+                .font(.system(size: 17, weight: .semibold))
+                .monospacedDigit()
+                .foregroundStyle(AppPalette.ink)
 
-                StatusPill(title: status.tone.title, tone: status.tone)
-            }
-
-            // 설명 문구는 두지 않는다. 왜 그런지는 추천안 화면의 AI 설명이 맡고,
-            // 이 화면은 "지금 어떤 상태인가"만 빠르게 훑도록 기준값만 남긴다.
-            Text("기준 \(status.targetValue)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            StatusPill(title: status.tone.title, tone: status.tone)
+                .frame(width: 28, alignment: .trailing)
         }
-        .padding(.vertical, 11)
+        .padding(.vertical, 15)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(status.nutrient) \(status.currentValue), \(status.tone.title), 기준 \(status.targetValue)")
     }
 
 }

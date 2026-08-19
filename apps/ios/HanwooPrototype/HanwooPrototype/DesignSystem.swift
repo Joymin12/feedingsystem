@@ -5,9 +5,10 @@ import SwiftUI
 // 이 파일을 바꾸면 앱 전체 룩이 함께 바뀐다.
 //
 // 원칙
-// - 배경은 차분한 중성 그레이, 콘텐츠는 흰 카드로 명확한 위계
-// - 브랜드 그린은 행동(버튼·활성 탭·강조)에만 사용
-// - 상태(부족/주의/적정/과잉)는 색 + 아이콘 + 텍스트를 항상 병기
+// - 배경은 흰색 한 장. 카드를 겹쳐 쌓지 않고 여백과 얇은 선으로 구분한다.
+// - 색은 초록 하나. 버튼과 활성 탭에만 쓰고, 빨강은 실제 문제에만 최소로 쓴다.
+// - 각 화면에서 가장 큰 글자는 그 화면의 핵심 숫자다.
+// - 상태는 배지 대신 작은 글자로 적는다. 배지가 화면마다 깔리면 화면이 시끄러워진다.
 
 // 라이트/다크 한 쌍으로 색을 정의한다.
 // 시스템 외양 설정을 따라 자동으로 바뀌므로 화면 코드는 모드를 신경 쓰지 않는다.
@@ -35,14 +36,20 @@ enum AppPalette {
     static let warning = Color(light: (0.78, 0.47, 0.10), dark: (0.95, 0.66, 0.28))
 
     // 표면 — 라이트는 흰색에 옅은 연두 기운, 다크는 녹색 기운이 도는 짙은 회색
-    static let canvas = Color(light: (0.969, 0.980, 0.961), dark: (0.075, 0.086, 0.075))
+    static let canvas = Color(light: (1.0, 1.0, 1.0), dark: (0.071, 0.075, 0.071))
     static let surface = Color(light: (1.0, 1.0, 1.0), dark: (0.125, 0.137, 0.125))
-    static let surfaceMuted = Color(light: (0.949, 0.969, 0.937), dark: (0.157, 0.173, 0.157))
+    static let surfaceMuted = Color(light: (0.965, 0.965, 0.972), dark: (0.145, 0.153, 0.145))
     static let surfaceStrong = Color(light: (0.906, 0.945, 0.882), dark: (0.184, 0.208, 0.180))
     static let hairline = Color(
-        light: UIColor.black.withAlphaComponent(0.06),
-        dark: UIColor.white.withAlphaComponent(0.10)
+        light: UIColor.black.withAlphaComponent(0.07),
+        dark: UIColor.white.withAlphaComponent(0.12)
     )
+
+    /// 문제 표시용 빨강. 부족·과잉에만 쓴다.
+    static let alert = Color(light: (0.753, 0.227, 0.169), dark: (0.937, 0.412, 0.353))
+
+    /// 보조 글자. 라벨, 단위, 설명에 쓴다.
+    static let subtle = Color(light: (0.604, 0.604, 0.627), dark: (0.541, 0.557, 0.541))
 
     // 연두 강조면 — 선택된 칩, 인기 배지 등 브랜드 색 배경이 필요할 때
     static let accentSoft = Color(light: (0.898, 0.957, 0.847), dark: (0.157, 0.227, 0.129))
@@ -69,29 +76,27 @@ struct AppScreenBackground: View {
 }
 
 // 카드 공통 스타일
+// 카드는 기본적으로 쓰지 않는다. 묶어서 보여줘야 할 때만 옅은 면을 깐다.
+// 테두리와 그림자를 빼서 배경 위에 떠 보이지 않게 한다.
 private struct CardSurface: ViewModifier {
-    var cornerRadius: CGFloat = 16
+    var cornerRadius: CGFloat = 14
 
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(AppPalette.surface)
+                    .fill(AppPalette.surfaceMuted)
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(AppPalette.hairline, lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
     }
 }
 
 extension View {
-    func cardSurface(cornerRadius: CGFloat = 16) -> some View {
+    func cardSurface(cornerRadius: CGFloat = 14) -> some View {
         modifier(CardSurface(cornerRadius: cornerRadius))
     }
 }
 
+/// 섹션. 카드로 감싸지 않고 작은 머리글 + 내용으로 둔다.
 struct SectionCard<Content: View>: View {
     let title: String
     let subtitle: String
@@ -99,21 +104,80 @@ struct SectionCard<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.headline)
-                    .foregroundStyle(AppPalette.ink)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(AppPalette.subtle)
                 if !subtitle.isEmpty {
                     Text(subtitle)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppPalette.subtle)
                 }
             }
             content
         }
-        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .cardSurface()
+    }
+}
+
+/// 화면 상단의 큰 숫자. 각 화면의 핵심 지표를 한 번에 전달한다.
+struct DisplayStat: View {
+    let value: String
+    let suffix: String
+    let caption: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(value)
+                    .font(.system(size: 42, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(AppPalette.ink)
+                if !suffix.isEmpty {
+                    Text(suffix)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(AppPalette.subtle)
+                }
+            }
+            if !caption.isEmpty {
+                Text(caption)
+                    .font(.footnote)
+                    .foregroundStyle(AppPalette.subtle)
+            }
+        }
+    }
+}
+
+/// 값 칩. 요약 수치를 늘어놓을 때 쓴다.
+struct ValueChip: View {
+    let name: String
+    let value: String
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Text(name)
+                .font(.system(size: 13))
+                .foregroundStyle(AppPalette.subtle)
+            Text(value)
+                .font(.system(size: 14, weight: .semibold))
+                .monospacedDigit()
+                .foregroundStyle(AppPalette.ink)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(AppPalette.surfaceMuted)
+        )
+    }
+}
+
+/// 목록 한 줄을 나누는 선.
+struct HairlineDivider: View {
+    var body: some View {
+        Rectangle()
+            .fill(AppPalette.hairline)
+            .frame(height: 1)
     }
 }
 
@@ -153,24 +217,24 @@ struct QuickActionCard: View {
     }
 }
 
+/// 상태 표시. 배경을 깐 배지 대신 작은 글자로 적는다.
+/// 문제가 있는 항목만 색을 쓰고, 주의와 적정은 회색으로 둬서 화면이 조용하게 유지된다.
 struct StatusPill: View {
     let title: String
     let tone: StatusTone
 
-    var body: some View {
-        // 접근성: 색상에만 의존하지 않도록 아이콘 + 텍스트 라벨을 함께 표기한다.
-        HStack(spacing: 4) {
-            Image(systemName: tone.iconName)
-                .font(.caption2)
-            Text(title)
-                .font(.caption.weight(.semibold))
+    private var textColor: Color {
+        switch tone {
+        case .deficient, .excess: AppPalette.alert
+        case .caution, .adequate: AppPalette.subtle
         }
-        .padding(.horizontal, 9)
-        .padding(.vertical, 5)
-        .background(tone.color.opacity(0.13))
-        .foregroundStyle(tone.color)
-        .clipShape(Capsule())
-        .accessibilityLabel("\(title) 상태")
+    }
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(textColor)
+            .accessibilityLabel("\(title) 상태")
     }
 }
 

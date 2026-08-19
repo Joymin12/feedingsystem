@@ -26,13 +26,15 @@ struct AIRecommendationView: View {
                 let primary = defaultRecommendation(from: analysis.recommendations)
                 let reference = analysis.recommendations.first(where: { $0.isReferenceOnly })
 
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 26) {
                     header(formula: formula, analysis: analysis)
 
                     if let primary {
                         switch primary.strategy {
                         case .maintenance:
-                            NoticeBanner(kind: .info, message: "현재 배합이 \(formula.stage.title) 기준을 만족합니다. 조정 없이 유지를 권장합니다.")
+                            Text("현재 배합이 기준을 만족합니다. 조정 없이 유지를 권장합니다.")
+                                .font(.footnote)
+                                .foregroundStyle(AppPalette.subtle)
                             resultCard(
                                 title: "현재 영양성분",
                                 subtitle: "\(formula.stage.title) 기준",
@@ -43,10 +45,9 @@ struct AIRecommendationView: View {
                             )
 
                         case .noSolution:
-                            NoticeBanner(kind: .warning, message: primary.reason)
+                            // 긴 안내문은 접어 둔다. 화면에 먼저 보여야 할 것은 조정 내역이다.
+                            LimitationNote(text: primary.reason)
                             if let reference, !reference.correctionActions.isEmpty {
-                                Text("가장 가까운 참고 교정안")
-                                    .font(.headline)
                                 adjustmentsCard(recommendation: reference, isReference: true, formula: formula)
                                 resultCard(
                                     title: "참고안 적용 후 예상",
@@ -59,7 +60,7 @@ struct AIRecommendationView: View {
 
                         default:
                             if !primary.isFullyResolved {
-                                NoticeBanner(kind: .warning, message: "완전 적정까지는 못 미칩니다. 남은 항목은 아래 결과에서 확인하세요.")
+                                LimitationNote(text: "완전 적정까지는 못 미칩니다. 남은 항목은 아래 결과에서 확인하세요.")
                             }
                             adjustmentsCard(recommendation: primary, isReference: primary.isReferenceOnly, formula: formula)
                             resultCard(
@@ -84,7 +85,9 @@ struct AIRecommendationView: View {
                             }
                     }
                 }
-                .padding(20)
+                .padding(.horizontal, 22)
+                .padding(.top, 8)
+                .padding(.bottom, 28)
             }
         }
         .background(AppScreenBackground())
@@ -94,15 +97,13 @@ struct AIRecommendationView: View {
     // MARK: 헤더
 
     private func header(formula: FeedFormula, analysis: AnalysisRun) -> some View {
-        SectionCard(title: "증감 시뮬레이션 결과", subtitle: formula.name) {
-            VStack(alignment: .leading, spacing: 8) {
-                if formula.isTestFormula {
-                    StatusPill(title: "테스트 배합", tone: .caution)
-                }
-                Text("배합 내 원료의 증감 시뮬레이션으로 찾은 교정 조합입니다. 모든 영양성분값은 계산 엔진이 산출·검증했습니다.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            Text("이렇게 바꿔보세요")
+                .font(.system(size: 28, weight: .bold))
+                .foregroundStyle(AppPalette.ink)
+            Text("\(formula.name) · 배합 내 원료만 조정")
+                .font(.footnote)
+                .foregroundStyle(AppPalette.subtle)
         }
     }
 
@@ -112,22 +113,24 @@ struct AIRecommendationView: View {
         let decreases = recommendation.correctionActions.filter { $0.type == .decrease }
         let increases = recommendation.correctionActions.filter { $0.type != .decrease }
 
-        return SectionCard(
-            title: isReference ? "참고 조정안" : "이렇게 조정하세요",
-            subtitle: "적용 후 총량 \(numberString(recommendation.simulatedMetrics.totalAsFedKg))kg 그대로 유지"
-        ) {
-            VStack(spacing: 10) {
-                ForEach(increases) { action in
-                    actionRow(action, isIncrease: true, formula: formula)
-                }
-                ForEach(decreases) { action in
-                    actionRow(action, isIncrease: false, formula: formula)
-                }
+        return VStack(alignment: .leading, spacing: 0) {
+            Text("총량 \(numberString(recommendation.simulatedMetrics.totalAsFedKg))kg 유지")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(AppPalette.subtle)
+                .padding(.bottom, 12)
 
-                Divider()
-                costRow(recommendation: recommendation, formula: formula)
-
+            HairlineDivider()
+            ForEach(increases) { action in
+                actionRow(action, isIncrease: true, formula: formula)
+                HairlineDivider()
             }
+            ForEach(decreases) { action in
+                actionRow(action, isIncrease: false, formula: formula)
+                HairlineDivider()
+            }
+
+            costRow(recommendation: recommendation, formula: formula)
+                .padding(.top, 14)
         }
     }
 
@@ -208,28 +211,27 @@ struct AIRecommendationView: View {
             .filter { $0.definitionID != nil && $0.definitionID == action.ingredientID }
             .reduce(0.0) { $0 + asFedKg(for: $1) }
         let afterKg = isIncrease ? beforeKg + action.amountKg : max(0, beforeKg - action.amountKg)
-        let accent = isIncrease ? AppPalette.primary : AppPalette.warning
 
-        return HStack(spacing: 10) {
-            Image(systemName: isIncrease ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                .font(.title3)
-                .foregroundStyle(accent)
-
-            VStack(alignment: .leading, spacing: 2) {
+        return HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(action.ingredientName)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.system(size: 15))
+                    .foregroundStyle(AppPalette.ink)
                 Text("\(numberString(beforeKg))kg → \(numberString(afterKg))kg")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 12))
+                    .monospacedDigit()
+                    .foregroundStyle(AppPalette.subtle)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            Text("\(isIncrease ? "+" : "−")\(numberString(action.amountKg))kg")
-                .font(.headline.monospacedDigit())
-                .foregroundStyle(accent)
+            Text("\(isIncrease ? "+" : "−")\(numberString(action.amountKg))")
+                .font(.system(size: 17, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(isIncrease ? AppPalette.primary : AppPalette.alert)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 14)
+        .accessibilityElement(children: .combine)
         .accessibilityLabel("\(action.ingredientName) \(numberString(beforeKg))킬로그램에서 \(numberString(afterKg))킬로그램으로 \(isIncrease ? "증량" : "감량")")
     }
 
@@ -355,4 +357,41 @@ struct AIRecommendationView: View {
         }
     }
 
+}
+
+// MARK: - 한계 안내
+//
+// 왜 완전 적정이 안 되는지는 중요하지만, 화면 맨 위를 긴 문단이 차지하면
+// 정작 봐야 할 조정 내역이 밀린다. 한 줄로 접어 두고 필요할 때 펼친다.
+
+struct LimitationNote: View {
+    let text: String
+    @State private var isExpanded = false
+
+    var body: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.18)) { isExpanded.toggle() }
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    Text("완전 적정안을 만들지 못했습니다")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(AppPalette.alert)
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(AppPalette.subtle)
+                    Spacer()
+                }
+                if isExpanded {
+                    Text(text)
+                        .font(.system(size: 13))
+                        .foregroundStyle(AppPalette.subtle)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
 }

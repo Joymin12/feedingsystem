@@ -161,12 +161,13 @@ enum StatusTone: String, Codable {
         }
     }
 
+    // 시스템 원색(.red/.yellow)은 채도가 높아 화면이 시끄러워진다.
+    // 문제 항목만 팔레트의 빨강을 쓰고, 나머지는 회색으로 눌러 둔다.
     var color: Color {
         switch self {
-        case .deficient: .red
-        case .adequate: .green
-        case .excess: .orange
-        case .caution: .yellow
+        case .deficient, .excess: AppPalette.alert
+        case .adequate: AppPalette.primary
+        case .caution: AppPalette.subtle
         }
     }
 
