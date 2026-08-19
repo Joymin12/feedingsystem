@@ -98,11 +98,8 @@ struct LedgerView: View {
             .map { (name: $0.key, kg: $0.value.reduce(0.0) { $0 + $1.remainingKg }) }
             .sorted { $0.kg > $1.kg }
 
-        return SectionCard(title: "남은 원료", subtitle: "창고에 남아 있는 양") {
+        return SectionCard(title: "남은 원료", subtitle: "") {
             if rows.isEmpty {
-                Text("남아 있는 원료가 없습니다. 구매 기록을 추가하면 여기에 표시됩니다.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(rows.enumerated()), id: \.element.name) { index, row in
@@ -128,14 +125,11 @@ struct LedgerView: View {
     private var purchaseListCard: some View {
         let sorted = store.purchases.sorted { $0.purchasedAt > $1.purchasedAt }
 
-        return SectionCard(title: "구매 내역", subtitle: "최근 구매가 위에 옵니다") {
+        return SectionCard(title: "구매 내역", subtitle: "") {
             if sorted.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("아직 기록이 없습니다.")
                         .font(.subheadline)
-                    Text("오른쪽 위 + 를 눌러 원료, 구매일, 수량, 단가를 입력하면 사료비와 재고가 함께 계산됩니다.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                 }
             } else {
                 VStack(spacing: 0) {

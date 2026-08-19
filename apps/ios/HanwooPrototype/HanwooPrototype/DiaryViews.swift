@@ -65,9 +65,6 @@ struct DiaryDetailView: View {
                             Text(formula.items.map { "\($0.name) \(formattedAmount($0))" }.joined(separator: " · "))
                                 .font(.headline)
                         }
-                        Text("이 배합을 기준으로 실제 급여와 경과를 수기로 기록하는 구조입니다.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
                     }
 
                     SectionCard(title: dateString(entry.date), subtitle: "기록 상세") {
@@ -118,7 +115,7 @@ struct DiaryEditorView: View {
                 Text(modeTitle)
                     .font(.largeTitle.bold())
 
-                SectionCard(title: "배합비 선택", subtitle: "분석 기준 배합 1개를 연결합니다") {
+                SectionCard(title: "배합비 선택", subtitle: "") {
                     VStack(spacing: 12) {
                         ForEach(store.userFacingFormulas) { formula in
                             Button {
@@ -152,7 +149,7 @@ struct DiaryEditorView: View {
                     }
                 }
 
-                SectionCard(title: "글쓰기", subtitle: "경과를 직접 기록합니다") {
+                SectionCard(title: "글쓰기", subtitle: "") {
                     VStack(spacing: 16) {
                         DatePicker("기록 날짜", selection: $date, displayedComponents: .date)
 

@@ -15,8 +15,6 @@ struct RegressionSuiteView: View {
                     subtitle: "\(results.count)개 테스트 배합"
                 ) {
                     let passedCount = results.filter(\.overallPassed).count
-                    Text("복합교정안이 기대 방향과 맞는지 테스트 배합으로 빠르게 확인합니다.")
-                        .foregroundStyle(.secondary)
                     Text("통과 \(passedCount) / \(results.count)")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(passedCount == results.count ? Color.green : Color.orange)

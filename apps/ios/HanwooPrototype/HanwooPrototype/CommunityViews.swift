@@ -12,9 +12,6 @@ struct CommunityView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("커뮤니티")
                     .font(.system(size: 30, weight: .bold, design: .rounded))
-                Text("첫 설치형 프로토타입에서는 읽기 중심 화면으로 둡니다.")
-                    .foregroundStyle(.secondary)
-
                 ForEach(store.posts) { post in
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .top) {
@@ -131,7 +128,7 @@ struct CommunityPostComposerView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    SectionCard(title: "커뮤니티 글쓰기", subtitle: "제목, 본문 요약, 분류를 입력합니다") {
+                    SectionCard(title: "커뮤니티 글쓰기", subtitle: "") {
                         VStack(alignment: .leading, spacing: 14) {
                             LabeledTextField(title: "제목", text: $title, placeholder: "예: 비지 비중을 낮췄을 때 반응")
                             VStack(alignment: .leading, spacing: 8) {
@@ -209,7 +206,7 @@ struct CommunityPostComposerView: View {
     // MARK: 배합 첨부
 
     private var attachmentCard: some View {
-        SectionCard(title: "배합 첨부 (선택)", subtitle: "이 글에 내 배합 기록을 함께 올립니다") {
+        SectionCard(title: "배합 첨부 (선택)", subtitle: "") {
             if let id = attachedFormulaID, let formula = store.formula(for: id) {
                 let snapshot = store.attachmentSnapshot(for: formula)
                 VStack(alignment: .leading, spacing: 10) {
@@ -223,9 +220,6 @@ struct CommunityPostComposerView: View {
                 }
             } else {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("기준을 만족한 배합만 올릴 수 있습니다. 다른 농가가 보고 따라 하는 자료이므로, 아직 손봐야 할 배합은 첨부되지 않습니다.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                     Button {
                         isPickingFormula = true
                     } label: {

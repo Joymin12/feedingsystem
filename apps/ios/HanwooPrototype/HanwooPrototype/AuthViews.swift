@@ -28,8 +28,6 @@ struct AuthGatewayView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("한우 사육 앱")
                             .font(.system(size: 32, weight: .bold, design: .rounded))
-                        Text("배합 분석, 복합교정안 추천, 사육일지 기록을 한 흐름으로 묶는 설치형 앱입니다.")
-                            .foregroundStyle(.secondary)
                     }
 
                     Picker("모드", selection: $isSignupMode) {
@@ -306,8 +304,6 @@ struct StageOnboardingView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     Text("주 사육 단계를 골라주세요")
                         .font(.largeTitle.bold())
-                    Text("홈과 분석 결과에서 이 단계를 대표 기준으로 먼저 보여줍니다.")
-                        .foregroundStyle(.secondary)
 
                     ForEach(FarmStage.allCases) { stage in
                         Button {

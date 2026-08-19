@@ -190,7 +190,6 @@ struct HistoryView: View {
             } header: {
                 Text("저장된 분석")
             } footer: {
-                Text("저장 당시 배합과 엔진 버전이 함께 기록되어, 이후 앱이 갱신되어도 같은 값이 표시됩니다.")
             }
 
             // 목록에는 이름과 단계만 쓴다. 분석 결과를 미리 계산하면
@@ -257,7 +256,7 @@ struct SavedAnalysisDetailView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                SectionCard(title: "배합 구성", subtitle: "저장 당시 원료와 투입량 (원물 기준)") {
+                SectionCard(title: "배합 구성", subtitle: "") {
                     VStack(spacing: 8) {
                         ForEach(record.formula.items) { item in
                             HStack {
@@ -279,7 +278,7 @@ struct SavedAnalysisDetailView: View {
                     }
                 }
 
-                SectionCard(title: "판정 결과", subtitle: "저장 당시 기준") {
+                SectionCard(title: "판정 결과", subtitle: "") {
                     VStack(spacing: 10) {
                         ForEach(record.statuses) { status in
                             HStack {

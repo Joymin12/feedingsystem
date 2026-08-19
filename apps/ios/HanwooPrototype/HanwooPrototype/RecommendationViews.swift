@@ -51,7 +51,7 @@ struct AIRecommendationView: View {
                                 adjustmentsCard(recommendation: reference, isReference: true, formula: formula)
                                 resultCard(
                                     title: "참고안 적용 후 예상",
-                                    subtitle: "완전 적정에는 도달하지 못합니다",
+                                    subtitle: "",
                                     before: analysis.metrics,
                                     after: reference.simulatedMetrics,
                                     stage: formula.stage
@@ -65,7 +65,7 @@ struct AIRecommendationView: View {
                             adjustmentsCard(recommendation: primary, isReference: primary.isReferenceOnly, formula: formula)
                             resultCard(
                                 title: "적용 후 영양성분",
-                                subtitle: "\(formula.stage.title) 기준, 조정 전 → 조정 후",
+                                subtitle: "",
                                 before: analysis.metrics,
                                 after: primary.simulatedMetrics,
                                 stage: formula.stage
@@ -300,13 +300,13 @@ struct AIRecommendationView: View {
         formula: FeedFormula,
         limitation: String?
     ) -> some View {
-        SectionCard(title: "AI 설명", subtitle: "엔진이 계산한 결과를 문장으로 풀어 설명합니다") {
+        SectionCard(title: "설명", subtitle: "") {
             VStack(alignment: .leading, spacing: 12) {
                 switch aiState {
                 case .idle, .loading:
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("설명을 만드는 중입니다…")
+                        Text("설명을 만드는 중…")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
@@ -317,14 +317,11 @@ struct AIRecommendationView: View {
                         .font(.footnote)
                         .foregroundStyle(AppPalette.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("수치와 판정은 계산 엔진이 확정한 값이며, AI는 이를 인용해 설명만 합니다.")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
 
                 case .unavailable:
                     NoticeBanner(
                         kind: .info,
-                        message: "지금은 AI 설명을 불러올 수 없습니다. 위의 조정안과 예상 결과는 그대로 확인하실 수 있습니다."
+                        message: "설명을 불러오지 못했습니다."
                     )
                     Button("다시 시도") {
                         Task { await loadAIExplanation(primary: primary, analysis: analysis, formula: formula, limitation: limitation) }

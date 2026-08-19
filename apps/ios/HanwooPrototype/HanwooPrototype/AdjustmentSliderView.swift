@@ -18,6 +18,7 @@ struct AdjustmentSliderView: View {
     /// 원료 라인별 조정된 투입량(kg). 키는 items 인덱스.
     @State private var amounts: [Int: Double] = [:]
     @State private var didInitialize = false
+    @State private var didSave = false
 
 
     var body: some View {
@@ -36,6 +37,7 @@ struct AdjustmentSliderView: View {
                     header(formula: formula, working: working)
                     slidersCard(formula: formula)
                     changesCard(before: baseMetrics, after: calculation.metrics, statuses: statuses)
+                    saveButton(formula: formula)
                     resetButton(formula: formula)
                 }
                 .padding(20)
@@ -115,29 +117,18 @@ struct AdjustmentSliderView: View {
         let originalKg = formula.items.reduce(0.0) { $0 + asFedKg(for: $1) }
         let deltaKg = totalKg - originalKg
 
-        return SectionCard(
-            title: "원료를 밀고 당겨보세요",
-            subtitle: "\(formula.name) · \(formula.stage.title) 기준"
-        ) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("슬라이더를 움직이면 영양소가 즉시 다시 계산됩니다. 여기서 바꾼 값은 저장되지 않으니 마음껏 시험해보세요.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-
-                HStack {
-                    Text("총 원물량")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text("\(numberString(totalKg))kg")
-                        .font(.headline.monospacedDigit())
-                        .foregroundStyle(AppPalette.ink)
-                    if abs(deltaKg) >= 0.05 {
-                        Text("(\(deltaKg > 0 ? "+" : "−")\(numberString(abs(deltaKg)))kg)")
-                            .font(.subheadline.monospacedDigit())
-                            .foregroundStyle(deltaKg > 0 ? AppPalette.primary : AppPalette.warning)
-                    }
-                }
+        return HStack(alignment: .firstTextBaseline) {
+            DisplayStat(
+                value: numberString(totalKg),
+                suffix: "kg",
+                caption: "총 원물량"
+            )
+            Spacer()
+            if abs(deltaKg) >= 0.05 {
+                Text("\(deltaKg > 0 ? "+" : "−")\(numberString(abs(deltaKg)))kg")
+                    .font(.system(size: 17, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(deltaKg > 0 ? AppPalette.primary : AppPalette.alert)
             }
         }
     }
@@ -182,7 +173,7 @@ struct AdjustmentSliderView: View {
             .padding(.vertical, 1)
         }
 
-        return SectionCard(title: "영양소 변화", subtitle: "조정 전 → 지금") {
+        return SectionCard(title: "영양소 변화", subtitle: "") {
             VStack(spacing: 8) {
                 row("CP", before.cpPctDm, after.cpPctDm)
                 row("TDN", before.tdnPctDm, after.tdnPctDm)
@@ -200,7 +191,7 @@ struct AdjustmentSliderView: View {
     // MARK: 슬라이더
 
     private func slidersCard(formula: FeedFormula) -> some View {
-        SectionCard(title: "원료별 투입량", subtitle: "밀고 당겨 조정합니다") {
+        SectionCard(title: "원료별 투입량", subtitle: "") {
             VStack(spacing: 18) {
                 ForEach(adjustableIndices(of: formula), id: \.self) { index in
                     sliderRow(formula: formula, index: index)
@@ -237,7 +228,10 @@ struct AdjustmentSliderView: View {
             Slider(
                 value: Binding(
                     get: { amounts[index] ?? original },
-                    set: { amounts[index] = (($0 * 10).rounded()) / 10 }
+                    set: {
+                        amounts[index] = (($0 * 10).rounded()) / 10
+                        didSave = false
+                    }
                 ),
                 in: 0...max(upper, 0.1)
             )
@@ -261,11 +255,30 @@ struct AdjustmentSliderView: View {
         .accessibilityLabel("\(item.name) \(numberString(current))킬로그램")
     }
 
+    /// 조정한 값을 실제 배합에 반영한다.
+    /// 실험만 하고 끝나는 경우가 많아 기본은 저장하지 않지만,
+    /// 마음에 드는 조합을 찾았을 때 다시 입력하게 만들 이유는 없다.
+    private func saveButton(formula: FeedFormula) -> some View {
+        Button {
+            var updated = normalized(formula)
+            for (index, value) in amounts where updated.items.indices.contains(index) {
+                updated.items[index].amount = value
+            }
+            store.updateFormula(updated)
+            didSave = true
+        } label: {
+            Text(didSave ? "저장됨" : "이 값으로 배합 저장")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(PrimaryButtonStyle())
+        .disabled(didSave)
+    }
+
     private func resetButton(formula: FeedFormula) -> some View {
         Button {
             amounts = initialAmounts(from: formula)
         } label: {
-            Text("처음 배합으로 되돌리기")
+            Text("되돌리기")
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.bordered)
