@@ -1,396 +1,293 @@
-# 한우 TMR 배합 계산/추천 엔진 개발 브리프
+# Hanwoo TMR Calculation And Recommendation Engine Developer Brief
 
-## 1. 프로젝트 목적
+## 1. Project Purpose
 
-이 프로젝트는 한우 농가가 `원물 기준 kg`로 현재 배합을 입력하면:
+Hanufit is an iOS app where Hanwoo farmers enter their current TMR/TMF formula in `as-fed kg`. The app engine calculates nutrition on a dry-matter basis, compares the result against growth-stage criteria, classifies each nutrient as `deficient / caution / adequate / excess`, and produces one composite correction plan.
 
-1. 내부적으로 `DM 기준`으로 영양을 계산하고
-2. 성장단계별 기준과 비교해 `부족 / 주의 / 적정 / 과잉`을 판정하며
-3. 최종적으로 `복합교정안` 형태의 추천안을 제시하는 앱입니다.
+Core principles:
 
-핵심 원칙:
+- The first release is based on the `iOS local calculation/correction engine`.
+- A recommendation is a composite correction plan, not a single-ingredient suggestion.
+- The default primary recommendation adjusts only ingredients already present in the user's formula.
+- Internal simulation may freely change total mass, but the final output must be normalized back to the user's original total as-fed kg.
+- AI may assist with candidate direction and explanation, but final calculation, classification, and validation are performed by the app engine.
 
-- `추천안 = 복합교정안 대표안`
-- `AI는 설명 전용`
-- `교정안 결정은 규칙 기반 엔진`
-- `1차 출시는 iOS 로컬 엔진`
-- `사용자 인증/커뮤니티도 현재는 로컬 저장 우선`
-- `서버/NestJS 계산 엔진 이관은 후속 단계`
+Example output:
 
-예상 출력 형태:
+- `Rice bran -20kg`
+- `Cracked corn +12kg`
+- `Soybean meal +3kg`
 
-- `미강 -20kg`
-- `파쇄옥수수 +12kg`
-- `대두박 +3kg`
+## 2. Data Boundaries
 
-## 2. 데이터 경계
+### Source DB
 
-현재 인증과 커뮤니티는 아래 로컬 기준 문서를 같이 본다.
+File:
 
-- `/Users/jowm/Desktop/feedingsystem/docs/user-auth-and-ingredient-scope.md`
-
-Supabase 문서는 현재 미사용 참고 문서다.
-
-- `/Users/jowm/Desktop/feedingsystem/docs/supabase/supabase-auth-community-setup.md`
-- `/Users/jowm/Desktop/feedingsystem/docs/supabase/schema.sql`
-
-프로젝트에는 원료 데이터가 3층으로 나뉩니다.
-
-### source DB
-
-파일:
 - `/Users/jowm/Desktop/feedingsystem/docs/seeds/ingredients.source.extensions.final.json`
 
-특징:
-- 현장명 유지
-- 결측값 `null` 허용
-- 원본/source-of-truth 역할
+Role:
 
-예:
-- `미강`
-- `비지`
-- `주정박`
-- `루핀`
+- Raw preservation layer.
+- Keeps field names.
+- Allows missing `null` values.
+- Keeps independent ingredients separate.
 
-### app catalog
+### App Catalog
 
-파일:
+File:
+
 - `/Users/jowm/Desktop/feedingsystem/apps/ios/HanwooPrototype/HanwooPrototype/IngredientCatalog.swift`
 
-특징:
-- 앱이 직접 계산에 사용하는 카탈로그
-- `IngredientNutritionProfile`이 optional을 허용하지 않기 때문에 결측 source 원료는 현재 `0`으로 보정해 편입
-- 사용자 검색/선택 가능
-- 추천 후보에도 현재 포함
+Role:
 
-중요:
-- 이 정책은 입력 편의를 우선한 것이고, 결측 보정 원료는 추천 품질 리스크가 있음
+- iOS calculation catalog.
+- Current policy keeps `0` values and does not exclude them as missing values.
+- Current policy also allows those ingredients as recommendation candidates.
 
-### curated API seed
+Caution:
 
-파일:
+- Long-term, consider optional nutrition profiles so the app can distinguish a true `0` from a placeholder `0`.
+
+### User Ingredient DB
+
+These are ingredients manually entered by app users from feed analysis reports.
+
+Role:
+
+- Reflect feed analysis values from local cooperatives, agricultural cooperatives, or analysis institutions.
+- Stored with `USER_...` IDs.
+- Direct input fields: moisture, CP, TDN, EE, NDF, ADF, NFC, ash, Ca, P.
+- Used in calculation and recommendation simulation exactly like catalog ingredients.
+
+Important:
+
+- Do not store user ingredients as name-only lines.
+- Only user ingredients with nutrition profiles should be used for calculation/recommendation.
+- Current storage is local UserDefaults. During server migration, move this to a user-scoped ingredient table.
+
+### API Seed
+
+File:
+
 - `/Users/jowm/Desktop/feedingsystem/docs/seeds/ingredients.seed.json`
 
-특징:
-- 완전한 영양 스냅샷이 있는 curated seed
-- `null` 허용 안 함
-- API/domain 테스트용
+Role:
 
-## 3. 입력과 계산 기준
+- Curated seed for future server migration.
+- Not required for the first release path.
 
-사용자 입력은 항상 `원물 kg`입니다.
+## 3. Input And Calculation Basis
 
-내부 계산은 다음 순서로 진행합니다.
+User input is always as-fed kg. The app converts this to dry-matter kg, then calculates each nutrient as a dry-matter weighted average.
 
-### 3.1 원물 -> DM 변환
-
-공식:
+### 3.1 As-Fed kg To DM kg
 
 ```text
-DM_kg = as_fed_kg × (dm_pct / 100)
+DM_kg = as_fed_kg x (dm_pct / 100)
 ```
 
-또는
+or:
 
 ```text
-DM_kg = as_fed_kg × (1 - moisture_pct / 100)
+DM_kg = as_fed_kg x (1 - moisture_pct / 100)
 ```
 
-### 3.2 배합 전체 영양 계산
+### 3.2 Whole-Formula Nutrients
 
-각 원료의 영양성분은 `%DM` 기준입니다.
-
-배합 전체 성분은 `DM 가중평균`으로 계산합니다.
-
-예:
+CP, TDN, EE, NDF, ADF, Ca, and P are `%DM` values.
 
 ```text
-배합 CP%DM = Σ(원료 DMkg × 원료 CP%DM) / 총 DMkg
-배합 TDN%DM = Σ(원료 DMkg × 원료 TDN%DM) / 총 DMkg
+formula CP%DM = sum(ingredient DMkg x ingredient CP%DM) / total DMkg
+formula TDN%DM = sum(ingredient DMkg x ingredient TDN%DM) / total DMkg
+formula EE%DM = sum(ingredient DMkg x ingredient EE%DM) / total DMkg
+formula NDF%DM = sum(ingredient DMkg x ingredient NDF%DM) / total DMkg
+formula ADF%DM = sum(ingredient DMkg x ingredient ADF%DM) / total DMkg
+formula Ca%DM = sum(ingredient DMkg x ingredient Ca%DM) / total DMkg
+formula P%DM = sum(ingredient DMkg x ingredient P%DM) / total DMkg
 ```
 
-### 3.3 수분
+### 3.3 Moisture
 
-전체 수분은 원물 기준으로 계산합니다.
+Moisture is calculated on an as-fed basis.
 
 ```text
-총 수분kg = Σ(원료 as-fed kg × moisture_pct / 100)
-배합 수분% = 총 수분kg / 총 as-fed kg × 100
+total moisture kg = sum(ingredient as-fed kg x moisture_pct / 100)
+formula moisture% = total moisture kg / total as-fed kg x 100
 ```
 
-### 3.4 Ca:P 비율
+### 3.4 Ca:P
 
-`Ca`, `P`는 각각 `%DM 절대량`으로 계산하고,
-`Ca:P`는 `%`가 아니라 `비율`입니다.
+Ca:P is a ratio, not a percentage.
 
 ```text
 Ca:P = Ca_pct_dm / P_pct_dm
 ```
 
-## 4. 성장단계 기준
+### 3.5 Calculation References
 
-### 육성기
+Dry-matter based calculation is a standard feed analysis and ration formulation method.
 
-- `CP 14~18`
-- `TDN 68~75`
-- `NDF 35~45`
-- `ADF 20~28`
-- `EE <= 6`
-- `Ca 0.45~0.80`
-- `P 0.28~0.45`
-- `Ca:P 1.5~2.0`
-- `수분 40~45`
+- Oregon State University Extension explains `DM% = 100% - Moisture%` and why as-fed and dry-matter bases must be separated.
+- Nebraska Extension explains that when converting from as-fed to dry matter, nutrient concentration increases and weight decreases according to dry-matter percentage.
+- Penn State Extension provides `As Fed nutrient content = DM nutrient content x DM ratio` and `DM nutrient content = As Fed nutrient content / DM ratio`.
+- USDA AMS Organic Handbook calculates dry-matter intake by multiplying as-fed feed amount by dry-matter percentage.
 
-### 비육전기
+Reference URLs:
 
-- `CP 12~15`
-- `TDN 72~76`
-- `NDF 30~38`
-- `ADF 18~24`
-- `EE <= 6`
-- `Ca 0.35~0.65`
-- `P 0.22~0.38`
-- `Ca:P 1.5~2.0`
-- `수분 40~45`
+- `https://extension.oregonstate.edu/catalog/em-8801-understanding-your-forage-test-results`
+- `https://extensionpubs.unl.edu/publication/g2093/feed-dry-matter-conversions`
+- `https://extension.psu.edu/determining-forage-quality-understanding-feed-analysis`
+- `https://www.ams.usda.gov/rules-regulations/organic/handbook/5017-1`
 
-### 비육후기
+## 4. Growth-Stage Criteria
 
-- `CP 11~13`
-- `TDN 73~78`
-- `NDF 25~32`
-- `ADF 15~20`
-- `EE <= 6`
-- `Ca 0.30~0.60`
-- `P 0.20~0.35`
-- `Ca:P 1.5~2.0`
-- `수분 40~45`
+### Adequate Range
 
-## 5. 판정 로직
+| Stage | Period | CP | TDN | EE | NDF | ADF | Ca | P | Ca:P | Moisture |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Growing | 6-14 months | 14-18 | 68-72 | <=5 | 35-45 | 20-28 | 0.45-0.80 | 0.28-0.45 | 1.5-2.0 | 40-45 |
+| Early fattening | 14-20 months | 12-15 | 72-76 | <=5 | 32-38 | 18-24 | 0.35-0.65 | 0.22-0.38 | 1.5-2.0 | 40-45 |
+| Late fattening | 20 months to shipping | 11-13 | 73-78 | <=5 | 25-32 | 15-20 | 0.30-0.60 | 0.20-0.35 | 1.5-2.0 | 40-45 |
 
-### 범위형 영양소
+### Caution Range
 
-- `적정`: 범위 안
-- `주의`: 범위 밖이지만 주의 밴드 안
-- `부족/과잉`: 주의 밴드 초과
+Caution ranges must not overlap the adequate range.
 
-### 수분
+| Stage | CP caution | TDN caution | EE caution | NDF caution | ADF caution | Ca caution | P caution | Ca:P caution | Moisture caution |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Growing | 13-<14 / >18-19 | 66-<68 / >72-74 | >5-6 | 32-<35 / >45-48 | 18-<20 / >28-30 | 0.38-<0.45 / >0.80-0.90 | 0.24-<0.28 / >0.45-0.52 | 1.4-<1.5 / >2.0-2.1 | 36-<40 / >45-49 |
+| Early fattening | 11-<12 / >15-16 | 70-<72 / >76-78 | >5-6 | 29-<32 / >38-40 | 16-<18 / >24-26 | 0.30-<0.35 / >0.65-0.75 | 0.19-<0.22 / >0.38-0.44 | 1.4-<1.5 / >2.0-2.1 | 36-<40 / >45-49 |
+| Late fattening | 10-<11 / >13-14 | 71-<73 / >78-80 | >5-6 | 23-<25 / >32-35 | 13-<15 / >20-22 | 0.25-<0.30 / >0.60-0.70 | 0.17-<0.20 / >0.35-0.41 | 1.4-<1.5 / >2.0-2.1 | 36-<40 / >45-49 |
 
-- `<35`: 부족
-- `35~40`: 주의
-- `40~45`: 적정
-- `45~50`: 주의
-- `>50`: 과잉
+For moisture, `<=35` is deficient and `>=50` is excess. For other nutrients, deficient/excess means outside the caution range.
 
-### 표현 톤
+## 5. Recommendation Engine Goal
 
-- `주의`: `권장합니다`, `고려해보세요`
-- `부족/과잉`: `점검이 필요합니다`
+The goal is to produce one primary correction plan that gets the ration into, or as close as possible to, the adequate range. To avoid breaking the farmer's existing feeding flow, the default primary recommendation only adjusts ingredients already in the current formula.
 
-## 6. 추천 엔진 목표
+Policy:
 
-엔진 목표는 `원료 1개 추천`이 아니라 `복합교정안 생성`입니다.
+- Candidate ingredients are current formula ingredient lines.
+- Do not add ingredients that are not in the formula to the default primary recommendation.
+- No increase/decrease cap.
+- Reject any candidate that makes an ingredient negative.
+- During internal search, total as-fed kg may change from 3000kg to 4000kg or 2000kg.
+- The final recommendation must be normalized back to the original user-entered total as-fed kg.
+- After normalization, recalculate and classify projected metrics.
+- Moisture should influence risk explanation but should not be a stronger rejection condition than CP/TDN/EE/NDF/ADF/Ca/P/Ca:P.
 
-예:
-
-- `미강 -20kg`
-- `파쇄옥수수 +12kg`
-- `대두박 +3kg`
-
-즉 엔진은 다음을 수행해야 합니다.
-
-1. 현재 배합 문제를 분류
-2. 과잉 원료 감량
-3. 전체 재계산
-4. 부족 원료 보강
-5. 최종 복합교정안 후보 생성
-6. 대표안 1개 선택
-
-## 7. 현재 엔진 구조
-
-핵심 파일:
-- `/Users/jowm/Desktop/feedingsystem/apps/ios/HanwooPrototype/HanwooPrototype/PrototypeStore+CorrectionEngine.swift`
-
-현재 구조:
-
-### 7.1 패턴 분류
-
-예:
-- `CP+TDN 과잉`
-- `CP 과잉`
-- `TDN 과잉`
-- `EE 과잉 + CP 부족`
-- `CP+TDN 부족`
-- `fiber deficit`
-
-### 7.2 플랜 생성
-
-패턴별로:
-- 감량 후보 찾기
-- 보강 후보 찾기
-- 다중 액션 묶음 생성
-
-### 7.3 대표안 선택
-
-대표안 선택 우선순위:
-
-1. 하드 제약 통과
-2. 과잉 해결 우선
-3. 부족 해결
-4. 보유 원료 우선
-5. 변경 수 적은 안
-6. 비용 낮은 안
-
-## 8. 후보 원료 규칙
-
-### 농후사료
-
-단백질/에너지 보강 또는 감량에 사용
-
-예:
-- `파쇄옥수수`
-- `대두박`
-- `루핀`
-- `맥주박`
-- `주정박`
-- `참깻묵(호마박)`
-
-### 조사료
-
-섬유 부족 또는 조사료 대체에 사용
-
-예:
-- `볏짚(사일리지)`
-- `티모시 짚`
-- `오차드그라스 짚`
-- `알팔파 펠렛`
-- `각종 사일리지`
-
-### 농산부산물
-
-부산물/껍질류/습식 원료
-
-예:
-- `미강`
-- `비지`
-- `맥강`
-- `사과박`
-- `감귤박`
-
-### 광물질 / 첨가제
-
-예:
-- `석회석`
-- `소금`
-- `인산칼슘류`
-
-## 9. 구현 규칙
-
-### 9.1 입력 단위
-
-- UI 입력: `원물 kg`
-- 내부 계산: `DM 기준`
-
-### 9.2 수분 파생
+## 6. Recommendation Flow
 
 ```text
-moisture_pct = 100 - dm_pct
+1. User enters formula as-fed kg
+2. App engine calculates current nutrients
+3. App engine classifies deficient/caution/adequate/excess
+4. AI or rule engine generates adjustment candidates
+5. App engine applies candidates and recalculates
+6. Candidate totals are normalized back to original total as-fed kg
+7. Normalized formula is recalculated
+8. One closest primary recommendation is shown
+9. AI explains the final recommendation in farmer-friendly language
 ```
 
-### 9.3 결측 원료 처리
+## 7. AI Role
 
-현재 앱 카탈로그는 `IngredientNutritionProfile`이 non-optional이므로:
+AI should:
 
-- source DB 결측값 `null`은 유지
-- app catalog 편입 시 결측값은 `0`으로 채움
-- 현재 정책상 이 원료도 추천 후보에 포함
+- Suggest increase/decrease candidates within ingredients currently in the formula.
+- Explain why each ingredient is increased or decreased.
+- Connect cause and action, such as "increase soybean meal because CP is low" or "reduce rice bran because EE is high."
+- Explain composite tradeoffs across CP, TDN, EE, fiber, and minerals.
+- Convert app-engine results into farmer-friendly text.
+- Tone may use "we recommend".
 
-개발 리스크:
+AI must not:
 
-- `대두박(232)`처럼 `CP만 있고 TDN/섬유/광물질이 0`으로 들어간 원료는
-  추천 품질을 왜곡할 수 있음
+- Guess final calculated values such as CP, TDN, or Ca:P.
+- Override app-engine classifications.
+- Finalize a primary recommendation with ingredients not in the app DB or current formula.
+- Use absolute claims such as "this is always good."
 
-장기 권장:
+## 8. Required Recommendation Output Shape
 
-- `IngredientNutritionProfile`을 optional 허용 구조로 리팩토링
-- 추천 시 `측정 가능 성분만` 쓰는 방향으로 개선
-
-## 10. 개발자가 구현해야 할 추천 결과 형태
-
-결과는 최소 아래 구조를 가져야 합니다.
+Return only one primary recommendation.
 
 ```json
 {
-  "strategy": "costEffective | balanced | ownedFirst",
-  "summary": "왜 이 교정안을 제안했는지 한 줄 요약",
+  "summary": "This plan reduces rice bran to lower excess EE while adjusting soybean meal and cracked corn to keep CP and TDN balanced.",
   "actions": [
     {
-      "type": "decrease | increase | add",
+      "type": "decrease",
       "ingredientId": "FEED_216",
-      "ingredientName": "미강",
+      "ingredientName": "Rice bran",
       "amountKg": 20
+    },
+    {
+      "type": "increase",
+      "ingredientId": "CUSTOM_SOYBEAN_MEAL",
+      "ingredientName": "Soybean meal",
+      "amountKg": 15
     }
   ],
+  "inputTotalAsFedKg": 3000,
+  "outputTotalAsFedKg": 3000,
   "projectedMetrics": {
     "cpPctDm": 12.8,
     "tdnPctDm": 74.1,
+    "eePctDm": 4.9,
     "ndfPctDm": 31.4,
     "adfPctDm": 19.2,
     "caPctDm": 0.42,
     "pPctDm": 0.29,
     "caPRatio": 1.45,
-    "moisturePct": 41.2
+    "moisturePct": 39.8
   },
-  "isFullyResolved": false,
-  "resolutionRate": 0.72,
-  "costDeltaKrw": 12000
+  "isPrimaryResolved": true,
+  "resolutionRate": 0.88
 }
 ```
 
-## 11. 개발자용 구현 프롬프트
+`inputTotalAsFedKg` and `outputTotalAsFedKg` must be equal. Even if internal candidate totals differ, normalize before showing the result.
 
-아래 프롬프트를 개발자/에이전트에게 그대로 전달해도 됩니다.
+## 9. Developer Implementation Prompt
 
 ```md
-한우 TMR 배합 추천 엔진을 구현한다.
+Implement the Hanwoo TMR recommendation engine.
 
-목표:
-- 사용자 입력은 항상 원물 kg
-- 내부 계산은 DM 기준
-- 결과는 단일 원료 추천이 아니라 복합교정안
+Goal:
+- User input is as-fed kg.
+- Internal calculation is dry-matter based.
+- The output is one composite correction plan, not a single-ingredient suggestion.
+- The primary recommendation only increases/decreases ingredients already present in the current formula.
+- Internal simulation totals may change, but the final result must be normalized back to the user's original total as-fed kg.
 
-입력:
-- 배합 원료 목록 (ingredient id, name, as-fed kg)
-- 성장단계 (육성기 / 비육전기 / 비육후기)
-- 원료 영양 DB (%DM)
+Input:
+- Formula ingredient list (ingredient id, name, as-fed kg)
+- Growth stage (growing / early fattening / late fattening)
+- Ingredient nutrition DB (%DM)
+- User-entered ingredient nutrition profiles (%DM)
 
-필수 계산:
-1. 각 원료 원물 kg -> DM kg 변환
-2. 배합 전체 CP, TDN, NDF, ADF, EE, Ca, P, 수분 계산
-3. Ca:P 비율 계산
-4. 성장단계 기준과 비교해 부족/주의/적정/과잉 판정
+Required calculation:
+1. Convert each ingredient from as-fed kg to DM kg
+2. Calculate whole-formula CP, TDN, EE, NDF, ADF, Ca, P, and moisture
+3. Calculate Ca:P ratio
+4. Compare against growth-stage criteria and classify deficient/caution/adequate/excess
 
-추천 원칙:
-1. 현재 배합 문제 패턴을 먼저 분류한다.
-2. 과잉은 감량으로 먼저 해결한다.
-3. 감량 후 전체 배합을 다시 계산한다.
-4. 부족은 보강 원료 추가로 해결한다.
-5. 결과는 여러 액션이 묶인 복합교정안이어야 한다.
+Recommendation rules:
+1. Classify the current formula problem pattern.
+2. Treat ingredients strongly contributing to excess nutrients as reduction candidates.
+3. Treat current-formula ingredients that can fill deficient nutrients as increase candidates.
+4. Combine multiple actions into a composite correction plan.
+5. Apply each candidate and recalculate with the app engine.
+6. If candidate total mass differs from the original, normalize back to the original total as-fed kg.
+7. Recalculate projected metrics after normalization.
+8. Show only one primary recommendation.
 
-예시 출력:
-- 미강 -20kg
-- 파쇄옥수수 +12kg
-- 대두박 +3kg
-
-대표안 선택 우선순위:
-1. 하드 제약 통과
-2. 과잉 해결 우선
-3. 부족 해결
-4. 변경 수 적은 안
-5. 비용 낮은 안
-
-중요:
-- AI는 설명 전용이다.
-- 교정안 결정은 규칙 기반 엔진이 한다.
-- source DB의 일부 원료는 결측이 있어 app catalog에서는 0으로 채워져 있다.
-- 이 원료는 추천 품질 왜곡 가능성이 있으므로 구현 시 별도 품질 주석을 남긴다.
+Important:
+- AI assists with explanation and candidate generation only.
+- Final calculation, classification, and recommendation validation are done by the app engine.
+- Do not add new ingredients to the default primary recommendation.
+- Moisture influences risk explanation but is not a hard first-priority rejection condition.
+- Explanations must describe composite correction tradeoffs.
 ```

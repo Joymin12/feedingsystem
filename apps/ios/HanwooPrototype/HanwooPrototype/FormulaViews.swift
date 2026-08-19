@@ -199,7 +199,7 @@ struct IngredientAmountEditor: View {
                     .multilineTextAlignment(.center)
                     .padding(.vertical, 12)
                     .padding(.horizontal, 8)
-                    .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
+                    .background(RoundedRectangle(cornerRadius: 14).fill(AppPalette.surfaceMuted))
                     .frame(maxWidth: .infinity)
 
                 Picker("단위", selection: $item.unit) {
@@ -220,7 +220,7 @@ struct IngredientAmountEditor: View {
                     .font(.subheadline)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 10)
-                    .background(RoundedRectangle(cornerRadius: 10).fill(Color(.secondarySystemBackground)))
+                    .background(RoundedRectangle(cornerRadius: 10).fill(AppPalette.surfaceMuted))
 
                 if let subtotal = subtotalKrw {
                     Text("= \(krwString(subtotal))")
@@ -236,6 +236,6 @@ struct IngredientAmountEditor: View {
             }
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 18).fill(Color(.secondarySystemBackground)))
+        .background(RoundedRectangle(cornerRadius: 18).fill(AppPalette.surfaceMuted))
     }
 }

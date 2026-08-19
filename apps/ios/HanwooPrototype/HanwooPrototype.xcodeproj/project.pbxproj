@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FE0000000000000000001050 /* NutrientGauge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001051 /* NutrientGauge.swift */; };
+		FE0000000000000000001048 /* IngredientOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001049 /* IngredientOnboardingView.swift */; };
+		FE0000000000000000001046 /* UsageReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001047 /* UsageReportService.swift */; };
+		FE0000000000000000001044 /* LedgerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001045 /* LedgerViews.swift */; };
+		FE0000000000000000001042 /* AdjustmentSliderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001043 /* AdjustmentSliderView.swift */; };
+		FE0000000000000000001040 /* AIExplanationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0000000000000000001041 /* AIExplanationService.swift */; };
 		AA000000000000000000000C /* HanwooPrototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000007 /* HanwooPrototypeApp.swift */; };
 		AA000000000000000000000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000008 /* Assets.xcassets */; };
 		AA0000000000000000000014 /* PrototypeStore+CalculationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000016 /* PrototypeStore+CalculationEngine.swift */; };
@@ -60,6 +66,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FE0000000000000000001051 /* NutrientGauge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NutrientGauge.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001049 /* IngredientOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IngredientOnboardingView.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001047 /* UsageReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UsageReportService.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001045 /* LedgerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LedgerViews.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001043 /* AdjustmentSliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AdjustmentSliderView.swift"; sourceTree = "<group>"; };
+		FE0000000000000000001041 /* AIExplanationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AIExplanationService.swift"; sourceTree = "<group>"; };
 		AA0000000000000000000006 /* HanwooPrototype.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HanwooPrototype.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000000000000000000007 /* HanwooPrototypeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HanwooPrototypeApp.swift; sourceTree = "<group>"; };
 		AA0000000000000000000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -152,14 +164,18 @@
 				AA000000000000000000001B /* RecommendationViews.swift */,
 				AA000000000000000000001D /* SupabaseService.swift */,
 				FE0000000000000000001001 /* Formatting.swift */,
+				FE0000000000000000001051 /* NutrientGauge.swift */,
 				FE0000000000000000001003 /* NutrientSupport.swift */,
 				FE0000000000000000001005 /* UserIngredientViews.swift */,
 				FE0000000000000000001007 /* IngredientPickerViews.swift */,
+				FE0000000000000000001049 /* IngredientOnboardingView.swift */,
 				FE0000000000000000001009 /* AuthViews.swift */,
 				FE000000000000000000100B /* HomeView.swift */,
+				FE0000000000000000001043 /* AdjustmentSliderView.swift */,
 				FE000000000000000000100D /* AnalysisViews.swift */,
 				FE000000000000000000100F /* DiaryViews.swift */,
 				FE0000000000000000001011 /* CommunityViews.swift */,
+				FE0000000000000000001045 /* LedgerViews.swift */,
 				FE0000000000000000001013 /* FarmView.swift */,
 				FE0000000000000000001015 /* RegressionSuiteView.swift */,
 				FE0000000000000000001017 /* FormulaViews.swift */,
@@ -170,6 +186,8 @@
 				FE0000000000000000001021 /* PrototypeStore+Community.swift */,
 				FE0000000000000000001023 /* PrototypeStore+Diary.swift */,
 				FE0000000000000000001025 /* PrototypeStore+Regression.swift */,
+				FE0000000000000000001047 /* UsageReportService.swift */,
+				FE0000000000000000001041 /* AIExplanationService.swift */,
 				FE0000000000000000001027 /* CalculationEngine.swift */,
 				FE0000000000000000001029 /* CorrectionEngine.swift */,
 				FE000000000000000000102B /* Repositories.swift */,
@@ -293,14 +311,18 @@
 				AA000000000000000000001C /* SupabaseService.swift in Sources */,
 				AA000000000000000000001E /* DomainModels.swift in Sources */,
 				FE0000000000000000001000 /* Formatting.swift in Sources */,
+				FE0000000000000000001050 /* NutrientGauge.swift in Sources */,
 				FE0000000000000000001002 /* NutrientSupport.swift in Sources */,
 				FE0000000000000000001004 /* UserIngredientViews.swift in Sources */,
 				FE0000000000000000001006 /* IngredientPickerViews.swift in Sources */,
+				FE0000000000000000001048 /* IngredientOnboardingView.swift in Sources */,
 				FE0000000000000000001008 /* AuthViews.swift in Sources */,
 				FE000000000000000000100A /* HomeView.swift in Sources */,
+				FE0000000000000000001042 /* AdjustmentSliderView.swift in Sources */,
 				FE000000000000000000100C /* AnalysisViews.swift in Sources */,
 				FE000000000000000000100E /* DiaryViews.swift in Sources */,
 				FE0000000000000000001010 /* CommunityViews.swift in Sources */,
+				FE0000000000000000001044 /* LedgerViews.swift in Sources */,
 				FE0000000000000000001012 /* FarmView.swift in Sources */,
 				FE0000000000000000001014 /* RegressionSuiteView.swift in Sources */,
 				FE0000000000000000001016 /* FormulaViews.swift in Sources */,
@@ -311,6 +333,8 @@
 				FE0000000000000000001020 /* PrototypeStore+Community.swift in Sources */,
 				FE0000000000000000001022 /* PrototypeStore+Diary.swift in Sources */,
 				FE0000000000000000001024 /* PrototypeStore+Regression.swift in Sources */,
+				FE0000000000000000001046 /* UsageReportService.swift in Sources */,
+				FE0000000000000000001040 /* AIExplanationService.swift in Sources */,
 				FE0000000000000000001026 /* CalculationEngine.swift in Sources */,
 				FE0000000000000000001028 /* CorrectionEngine.swift in Sources */,
 				FE000000000000000000102A /* Repositories.swift in Sources */,

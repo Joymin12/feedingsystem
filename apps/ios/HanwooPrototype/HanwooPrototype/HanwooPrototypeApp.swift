@@ -8,27 +8,16 @@ struct HanwooPrototypeApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(store)
-                .task {
-                    #if DEBUG
-                    print("=== REGRESSION START ===")
-                    for formula in store.formulas.filter(\.isTestFormula) {
-                        let run = store.analysis(for: formula)
-                        print(">>> [\(formula.name)]")
-                        for rec in run.recommendations {
-                            let acts = rec.correctionActions.map { "\($0.type)==\($0.ingredientName) \(String(format:"%.1f",$0.amountKg))kg" }.joined(separator: " / ")
-                            print("    strategy=\(rec.strategy) full=\(rec.isFullyResolved) actions=[\(acts)]")
-                        }
-                        if run.recommendations.first?.strategy == .noSolution { print("    noSolution") }
-                    }
-                    print("=== REGRESSION END ===")
-                    #endif
-                }
         }
     }
 }
 
 struct RootView: View {
     @EnvironmentObject private var store: PrototypeStore
+
+    /// 임시: 디자인 작업 중에는 로그인 게이트를 건너뛴다.
+    /// 출시 전에 false로 되돌리거나 이 플래그 자체를 제거할 것.
+    private let skipsAuthGateForDesignWork = true
 
     var body: some View {
         Group {
@@ -40,7 +29,14 @@ struct RootView: View {
                 MainTabView()
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppPalette.canvas)
+        .onAppear {
+            guard skipsAuthGateForDesignWork, !store.isAuthenticated else { return }
+            _ = store.login(loginID: "qwer123", password: "asdf123")
+            if store.selectedStage == nil {
+                store.selectedStage = .fatteningEarly
+            }
+        }
     }
 }
 

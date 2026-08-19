@@ -15,6 +15,8 @@ extension PrototypeStore {
         return visible.sorted(by: { $0.checkedAt > $1.checkedAt })
     }
 
+    /// 주의: 배합 수만큼 교정 엔진을 돌리므로 비싸다.
+    /// 목록 화면에서는 쓰지 말고, 정말 전체 결과가 필요할 때만 쓴다.
     var userFacingAnalyses: [AnalysisRun] {
         userFacingFormulas
             .map { analysis(for: $0) }
@@ -81,7 +83,19 @@ extension PrototypeStore {
         return selectedFormulaID
     }
 
+    /// 배합 내용이 같으면 이전 결과를 그대로 돌려준다.
+    /// 원료 구성, 투입량, 단위, 단가, 성장단계 중 하나라도 바뀌면 키가 달라져 다시 계산한다.
+    private func analysisCacheKey(for formula: FeedFormula) -> String {
+        let items = formula.items
+            .map { "\($0.definitionID ?? $0.name):\($0.amount):\($0.unit.rawValue)" }
+            .joined(separator: "|")
+        return "\(formula.id)|\(formula.stage.rawValue)|\(items)"
+    }
+
     func analysis(for formula: FeedFormula) -> AnalysisRun {
+        let cacheKey = analysisCacheKey(for: formula)
+        if let cached = analysisCache[cacheKey] { return cached }
+
         let stage = formula.stage
         let criteria = stage.criteria
         let calculation = calculateMetrics(for: formula)
@@ -90,7 +104,7 @@ extension PrototypeStore {
         let recommendations = buildRecommendations(formula: formula, stage: stage, metrics: metrics)
         let summary = buildSummary(stage: stage, metrics: metrics, missingIngredients: calculation.missingIngredients, totalIngredients: formula.items.count)
 
-        return AnalysisRun(
+        let run = AnalysisRun(
             formulaId: formula.id,
             formulaName: formula.name,
             stage: stage,
@@ -100,6 +114,18 @@ extension PrototypeStore {
             statuses: statuses,
             recommendations: recommendations
         )
+        // 캐시가 무한정 커지지 않도록 적당한 선에서 비운다.
+        if analysisCache.count > 24 { analysisCache.removeAll(keepingCapacity: true) }
+        analysisCache[cacheKey] = run
+        return run
+    }
+
+    /// 판정만 필요할 때 쓰는 가벼운 경로.
+    /// 교정 엔진을 돌리지 않으므로 목록이나 요약 화면에서 안전하게 쓸 수 있다.
+    func statusesOnly(for formula: FeedFormula) -> (metrics: AnalysisSummaryMetrics, statuses: [NutrientStatus]) {
+        let metrics = calculateMetrics(for: formula).metrics
+        let statuses = buildStatuses(stage: formula.stage, criteria: formula.stage.criteria, metrics: metrics)
+        return (metrics, statuses)
     }
 
     // MARK: - 분석 이력 (저장/복제/삭제)

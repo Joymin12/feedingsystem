@@ -3,11 +3,13 @@ import { Module } from "@nestjs/common";
 import { AuthModule } from "./auth/auth.module.js";
 import { AnalysisRunsModule } from "./analysis-runs/analysis-runs.module.js";
 import { DataModule } from "./data/data.module.js";
+import { ExplanationsModule } from "./explanations/explanations.module.js";
 import { FarmsModule } from "./farms/farms.module.js";
 import { FormulasModule } from "./formulas/formulas.module.js";
 import { IngredientsModule } from "./ingredients/ingredients.module.js";
 import { RecommendationsModule } from "./recommendations/recommendations.module.js";
 import { ReportsModule } from "./reports/reports.module.js";
+import { UsageModule } from "./usage/usage.module.js";
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { ReportsModule } from "./reports/reports.module.js";
     AnalysisRunsModule,
     RecommendationsModule,
     ReportsModule,
+    ExplanationsModule,
+    UsageModule,
   ],
 })
 export class AppModule {}

@@ -12,6 +12,13 @@ final class PrototypeStore: ObservableObject {
     let userIngredientRepository: UserIngredientRepository
     let formulaRepository: FormulaRepository
     let analysisHistoryRepository: AnalysisHistoryRepository
+    let purchaseRepository: PurchaseRepository
+
+    /// 분석 결과 캐시.
+    /// analysis(for:)는 교정 엔진(좌표하강 + 재시작 탐색)을 돌리므로 한 번 계산이 무겁다.
+    /// SwiftUI는 body를 자주 다시 그리므로 캐시가 없으면 같은 배합을 반복해서 다시 푼다.
+    /// 키는 배합의 내용이며, 원료·투입량·단계가 하나라도 바뀌면 자동으로 무효화된다.
+    var analysisCache: [String: AnalysisRun] = [:]
 
     // MARK: - 원료 DB (수집/정제된 실데이터 기반, 가격은 카테고리별 기본값)
     let ingredientDefinitions: [IngredientDefinition] = PrototypeStore.ingredientCatalog
@@ -27,6 +34,10 @@ final class PrototypeStore: ObservableObject {
     @Published var savedAnalyses: [SavedAnalysis] {
         didSet { analysisHistoryRepository.saveAnalyses(savedAnalyses) }
     }
+    // 원료 구매 기록(가계부). 변경 즉시 영속화.
+    @Published var purchases: [FeedPurchase] {
+        didSet { purchaseRepository.savePurchases(purchases) }
+    }
     @Published var diaryEntries: [DiaryEntry]
     @Published var posts: [CommunityPost]
     @Published var userIngredientDefinitions: [UserIngredientDefinition]
@@ -40,15 +51,18 @@ final class PrototypeStore: ObservableObject {
         let ingredientRepo = UserDefaultsUserIngredientRepository()
         let formulaRepo = UserDefaultsFormulaRepository()
         let historyRepo = UserDefaultsAnalysisHistoryRepository()
+        let purchaseRepo = UserDefaultsPurchaseRepository()
         self.userRepository = userRepo
         self.postRepository = postRepo
         self.userIngredientRepository = ingredientRepo
         self.formulaRepository = formulaRepo
         self.analysisHistoryRepository = historyRepo
+        self.purchaseRepository = purchaseRepo
         self.users = supabaseService.isConfigured ? [] : userRepo.loadUsers()
         self.currentLoginID = supabaseService.isConfigured ? nil : userRepo.loadCurrentLoginID()
         self.userIngredientDefinitions = ingredientRepo.loadUserIngredients()
         self.savedAnalyses = historyRepo.loadAnalyses()
+        self.purchases = purchaseRepo.loadPurchases()
         let formulaA = FeedFormula(
             name: "비육전기 기본 배합",
             stage: .fatteningEarly,
@@ -177,26 +191,9 @@ final class PrototypeStore: ObservableObject {
         self.formulas = userFormulas + [formulaC, formulaD, formulaE, formulaF, formulaG]
         self.selectedFormulaID = userFormulas.first?.id ?? formulaA.id
 
-        #if DEBUG
-        let _debugFormulas = [formulaC, formulaD, formulaE, formulaF, formulaG]
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            var lines: [String] = ["DEBUG START \(Date())"]
-            for formula in _debugFormulas {
-                let run = self.analysis(for: formula)
-                lines.append(">>> [\(formula.name)]")
-                for rec in run.recommendations {
-                    let acts = rec.correctionActions.map { "\($0.type)==\($0.ingredientName) \(String(format:"%.1f",$0.amountKg))kg" }.joined(separator: " / ")
-                    lines.append("    strategy=\(rec.strategy) full=\(rec.isFullyResolved) actions=[\(acts)]")
-                }
-                if run.recommendations.first?.strategy == .noSolution { lines.append("    noSolution") }
-            }
-            lines.append("DEBUG END")
-            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-            let url = docs.appendingPathComponent("hanwoo_regression.txt")
-            try? lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
-        }
-        #endif
+        // 시작 시 회귀 배합을 자동 실행하던 코드를 제거했다.
+        // 실행할 때마다 테스트 배합 5종에 교정 엔진을 돌려 첫 화면이 그만큼 늦어졌다.
+        // 회귀 확인은 내 농장 > 엔진 검증 화면에서 필요할 때만 한다.
         self.diaryEntries = [
             DiaryEntry(
                 date: .now,

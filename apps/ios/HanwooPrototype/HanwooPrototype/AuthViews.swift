@@ -14,6 +14,7 @@ struct AuthGatewayView: View {
     @State private var emailVerificationInput = ""
     @State private var emailVerified = false
     @State private var selectedIngredientIDs: Set<String> = []
+    @State private var isPickingIngredients = false
     @State private var isShowingPassword = false
     @State private var isShowingPasswordConfirm = false
     @State private var authMessage = ""
@@ -146,49 +147,25 @@ struct AuthGatewayView: View {
                     Text("자신의 원료 선택")
                         .font(.headline)
                     Spacer()
-                    Text("\(selectedIngredientIDs.count)개 선택")
+                    Text(selectedIngredientIDs.isEmpty ? "선택 안 함" : "\(selectedIngredientIDs.count)개 선택")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(selectedIngredientIDs.isEmpty ? Color.secondary : AppPalette.primary)
                 }
-                Text("회원가입 시에만 건너뛰기가 가능하며, 선택한 원료만 배합의 원료 추가 목록에 표시됩니다.")
+                Text("카테고리별로 차례로 고릅니다. 다른 농가가 많이 쓰는 원료가 위에 표시됩니다. 건너뛰면 전체 원료가 표시됩니다.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        ForEach(IngredientCategory.allCases) { category in
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(category.rawValue)
-                                    .font(.subheadline.bold())
-                                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                                    ForEach(store.definitions(for: category)) { definition in
-                                        Button {
-                                            toggleIngredient(definition.id)
-                                        } label: {
-                                            HStack(spacing: 8) {
-                                                Image(systemName: selectedIngredientIDs.contains(definition.id) ? "checkmark.circle.fill" : "circle")
-                                                    .foregroundStyle(selectedIngredientIDs.contains(definition.id) ? AppPalette.primary : .secondary)
-                                                Text(definition.name)
-                                                    .font(.caption.weight(.semibold))
-                                                    .foregroundStyle(.primary)
-                                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                            }
-                                            .padding(.vertical, 10)
-                                            .padding(.horizontal, 10)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                                    .fill(selectedIngredientIDs.contains(definition.id) ? AppPalette.primary.opacity(0.10) : AppPalette.surfaceMuted)
-                                            )
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                            }
-                            .padding(.bottom, 4)
-                        }
-                    }
+                Button {
+                    isPickingIngredients = true
+                } label: {
+                    Label(selectedIngredientIDs.isEmpty ? "원료 고르러 가기" : "다시 고르기", systemImage: "leaf")
+                        .frame(maxWidth: .infinity)
                 }
-                .frame(height: 260)
+                .buttonStyle(SecondaryButtonStyle())
+            }
+            .sheet(isPresented: $isPickingIngredients) {
+                IngredientOnboardingView(selection: $selectedIngredientIDs) {}
+                    .environmentObject(store)
             }
 
             HStack(spacing: 12) {

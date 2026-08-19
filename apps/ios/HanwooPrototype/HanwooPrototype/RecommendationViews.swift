@@ -9,7 +9,15 @@ import SwiftUI
 struct AIRecommendationView: View {
     @EnvironmentObject private var store: PrototypeStore
     let formulaID: UUID
-    @State private var showsExplanation = false
+
+    /// AI 설명 상태. 실패는 오류 화면이 아니라 내장 설명으로 조용히 되돌아간다.
+    private enum AIState: Equatable {
+        case idle
+        case loading
+        case loaded(String)
+        case unavailable
+    }
+    @State private var aiState: AIState = .idle
 
     var body: some View {
         ScrollView {
@@ -63,7 +71,17 @@ struct AIRecommendationView: View {
                             )
                         }
 
-                        explanationSection(primary: primary, analysis: analysis, stage: formula.stage)
+                        // 화면에 조정 내역이 표시되는 추천안을 그대로 AI에게 보낸다.
+                        // noSolution일 때 primary는 조정 내역이 비어 있고 실제 내역은 참고안에 있다.
+                        let explained = (primary.strategy == .noSolution ? reference : nil) ?? primary
+                        let limitation = primary.strategy == .noSolution ? primary.reason : nil
+
+                        aiExplanationSection(primary: explained, analysis: analysis, formula: formula, limitation: limitation)
+                            .task {
+                                // 버튼을 누르게 하지 않는다. 설명은 부가 기능이 아니라 기본 출력이다.
+                                guard aiState == .idle else { return }
+                                await loadAIExplanation(primary: explained, analysis: analysis, formula: formula, limitation: limitation)
+                            }
                     }
                 }
                 .padding(20)
@@ -109,16 +127,6 @@ struct AIRecommendationView: View {
                 Divider()
                 costRow(recommendation: recommendation, formula: formula)
 
-                // 증량 원료 중 사양학 사용수준 주의사항이 있는 것만 안내
-                let notes = usageNotes(for: increases, formula: formula)
-                if !notes.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(notes, id: \.self) { note in
-                            NoticeBanner(kind: .info, message: note)
-                        }
-                    }
-                    .padding(.top, 4)
-                }
             }
         }
     }
@@ -189,15 +197,6 @@ struct AIRecommendationView: View {
                         .font(.subheadline.monospacedDigit().bold())
                         .foregroundStyle(delta > 0 ? AppPalette.warning : AppPalette.primary)
                 }
-            }
-            HStack {
-                Text("원료비 변동")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(deltaText)
-                    .font(.caption.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(delta > 0 ? AppPalette.warning : (delta < 0 ? AppPalette.primary : Color.secondary))
             }
         }
     }
@@ -288,33 +287,72 @@ struct AIRecommendationView: View {
         }
     }
 
-    // MARK: 산출 근거 (접힘)
+    // MARK: AI 설명
+    //
+    // 엔진이 확정한 판정·교정 결과를 서버에 보내 농가용 문장으로 받아온다.
+    // 화면에 들어오면 자동으로 불러온다. 설명은 부가 기능이 아니라 기본 출력이다.
 
-    private func explanationSection(primary: Recommendation, analysis: AnalysisRun, stage: FarmStage) -> some View {
-        DisclosureGroup(isExpanded: $showsExplanation) {
-            VStack(alignment: .leading, spacing: 14) {
-                ForEach(RecommendationExplanationBuilder.sections(
-                    for: primary,
-                    beforeMetrics: analysis.metrics,
-                    beforeStatuses: analysis.statuses,
-                    stage: stage
-                )) { section in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(section.title)
-                            .font(.subheadline.weight(.semibold))
-                        Text(section.body)
+    private func aiExplanationSection(
+        primary: Recommendation,
+        analysis: AnalysisRun,
+        formula: FeedFormula,
+        limitation: String?
+    ) -> some View {
+        SectionCard(title: "AI 설명", subtitle: "엔진이 계산한 결과를 문장으로 풀어 설명합니다") {
+            VStack(alignment: .leading, spacing: 12) {
+                switch aiState {
+                case .idle, .loading:
+                    HStack(spacing: 10) {
+                        ProgressView()
+                        Text("설명을 만드는 중입니다…")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                case .loaded(let text):
+                    Text(text)
+                        .font(.footnote)
+                        .foregroundStyle(AppPalette.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("수치와 판정은 계산 엔진이 확정한 값이며, AI는 이를 인용해 설명만 합니다.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+
+                case .unavailable:
+                    NoticeBanner(
+                        kind: .info,
+                        message: "지금은 AI 설명을 불러올 수 없습니다. 위의 조정안과 예상 결과는 그대로 확인하실 수 있습니다."
+                    )
+                    Button("다시 시도") {
+                        Task { await loadAIExplanation(primary: primary, analysis: analysis, formula: formula, limitation: limitation) }
+                    }
+                    .font(.footnote)
                 }
             }
-            .padding(.top, 12)
-        } label: {
-            Text("왜 이렇게 추천했나")
-                .font(.headline)
-                .foregroundStyle(AppPalette.ink)
         }
-        .padding(16)
-        .cardSurface()
     }
+
+    private func loadAIExplanation(
+        primary: Recommendation,
+        analysis: AnalysisRun,
+        formula: FeedFormula,
+        limitation: String?
+    ) async {
+        aiState = .loading
+        let request = AIExplanationRequest(
+            recommendation: primary,
+            analysis: analysis,
+            formula: formula,
+            asFedKg: { asFedKg(for: $0) },
+            limitationOverride: limitation
+        )
+        do {
+            let response = try await AIExplanationService().explain(request)
+            aiState = .loaded(response.text)
+        } catch {
+            aiState = .unavailable
+        }
+    }
+
 }

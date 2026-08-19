@@ -1,43 +1,51 @@
-# 하누핏 Hanwoo TMR AI Recommendation MVP
+# Hanufit Hanwoo TMR Recommendation App
 
-한우 농가용 TMR 배합 분석 및 추천 서비스의 초기 구현체입니다.
+Hanufit is an iOS app for Hanwoo TMR/TMF ration analysis and composite correction recommendations. The first release is intentionally based on a local iOS calculation and correction engine, without requiring a backend server. User-entered ingredient nutrition profiles are treated as calculation-ready ingredients and are included in analysis and recommendation simulation.
 
-## 구조
+## Repository Structure
 
-- `apps/api`: NestJS 기반 API
-- `apps/ios`: SwiftUI 기반 iOS 설치형 프로토타입
-- `packages/contracts`: OpenAPI와 맞춘 공유 타입
-- `packages/domain`: 계산 엔진, 추천 엔진, 설명 템플릿
-- `docs/openapi.yaml`: API 계약
-- `docs/db/schema.sql`: PostgreSQL DDL
-- `docs/seeds/ingredients.seed.json`: 최소 원료 seed
-- `docs/development-operating-model.md`: 단계형 개발 운영안
-- `docs/releases`: 단계별 릴리즈 기록
+- `apps/ios`: SwiftUI iOS app.
+- `apps/ios/HanwooPrototype/HanwooPrototype/DomainModels.swift`: Growth-stage criteria, ingredient, formula, analysis, recommendation, and user domain models.
+- `apps/ios/HanwooPrototype/HanwooPrototype/IngredientCatalog.swift`: App-side ingredient catalog for local calculation.
+- `apps/ios/HanwooPrototype/HanwooPrototype/PrototypeStore+CalculationEngine.swift`: Dry-matter based nutrition calculation.
+- `apps/ios/HanwooPrototype/HanwooPrototype/PrototypeStore+CorrectionEngine.swift`: Composite ration correction engine.
+- `apps/ios/HanwooPrototype/HanwooPrototype/RecommendationViews.swift`: Recommendation UI.
+- `docs/architecture.md`: Current system architecture.
+- `docs/ios-refactor-handoff.md`: Refactor handoff document for iOS developers.
+- `docs/launch-architecture-refactor-plan.md`: Pre-release architecture refactor plan.
+- `docs/tmr-recommendation-engine-developer-brief.md`: Calculation and recommendation engine developer brief.
+- `docs/release-app-delivery.md`: Release-app implementation direction.
+- `docs/seeds`: Ingredient seed files and DB normalization policies.
 
-## 현재 포함 범위
+## Current Scope
 
-- OpenAPI v1 초안
-- PostgreSQL DDL 초안
-- 원료 12종 seed JSON
-- 분석/추천 순수 도메인 로직
-- API 초기 골격
-- iOS 설치형 프로토타입 골격
+- Local sign-up and login flow.
+- User-specific ingredient selection.
+- User-entered ingredient add/edit/delete.
+- As-fed kg based ration editing.
+- Dry-matter based CP, TDN, EE, NDF, ADF, Ca, P, Ca:P, and moisture calculation.
+- Growth-stage status classification: deficient, caution, adequate, excess.
+- Composite correction recommendation using existing formula ingredients first.
+- Recent analysis, diary, and community baseline flows.
 
-## 개발 원칙
+## Development Principles
 
-- 모든 농장 데이터는 `farm_id` 스코프로 강제합니다.
-- `analysis_runs`는 재현 가능한 스냅샷 저장을 기본으로 합니다.
-- `recommendation_memos`는 append-only 이력 테이블로 유지합니다.
-- 프론트는 서버 결과를 진실 소스로 사용하고 클라이언트 재계산을 하지 않습니다.
+- The first release uses the iOS local calculation engine as the source of truth.
+- Server and Supabase work should remain optional until the local engine and UX are stable.
+- User input is as-fed kg; nutrient averaging is done on a dry-matter basis.
+- User-entered ingredients must be included in calculation and recommendation the same way as catalog ingredients.
+- AI must not invent final nutrient values. AI may assist with candidate direction and explanation, but final calculation, classification, and recommendation validation must be performed by the app engine.
 
-## 실행 환경
+## Requirements
 
-- Node.js 20 이상 권장
-- pnpm 10.7.0
-- iOS 앱 실행: macOS + Xcode 필요
-- Windows 실행: API, 도메인 로직, 타입체크, 테스트는 가능하지만 iOS Simulator 실행은 불가
+- Node.js 20 or later recommended.
+- pnpm 10.7.0.
+- iOS app execution requires macOS and Xcode.
+- Windows can run API/domain/typecheck/test workflows, but cannot run iOS Simulator directly.
 
-## 처음 받았을 때 설치
+## Setup
+
+Node packages remain for future API/domain work. They are not required just to open the iOS app in Xcode.
 
 ```bash
 cd feedingsystem
@@ -45,30 +53,7 @@ corepack enable
 corepack pnpm install
 ```
 
-Windows에서는 프로젝트를 받은 폴더에서 동일하게 실행합니다.
-
-```powershell
-corepack enable
-corepack pnpm install
-```
-
-## API 실행
-
-루트에서 API 개발 서버를 실행합니다.
-
-```bash
-corepack pnpm dev
-```
-
-동일한 명령을 직접 필터로 실행할 수도 있습니다.
-
-```bash
-corepack pnpm --filter @feedingsystem/api dev
-```
-
-현재 API는 NestJS 초기 골격입니다. iOS 프로토타입은 목데이터 기반이므로, 앱 화면 확인만 할 때는 API 서버가 필수는 아닙니다.
-
-## 검증 명령
+## Verification Commands
 
 ```bash
 corepack pnpm typecheck
@@ -76,46 +61,47 @@ corepack pnpm test
 corepack pnpm build
 ```
 
-## iOS 앱 실행: macOS
+## Run The iOS App On macOS
 
-Xcode에서 프로젝트를 엽니다.
+Open the Xcode project:
 
 ```bash
 open apps/ios/HanwooPrototype/HanwooPrototype.xcodeproj
 ```
 
-Xcode에서 다음 순서로 실행합니다.
+In Xcode:
 
-1. 실행 대상에서 `iPhone Simulator`를 선택합니다.
-2. 상단 `Run` 버튼을 누르면 시뮬레이터가 자동으로 켜지고 앱이 설치됩니다.
-3. 실제 아이폰에 설치하려면 `Signing & Capabilities`에서 본인 Apple ID Team을 선택한 뒤, 연결된 iPhone을 실행 대상으로 고릅니다.
+1. Select an iPhone Simulator target.
+2. Press `Run`.
+3. To install on a physical iPhone, select your Apple ID team in `Signing & Capabilities`, then choose the connected iPhone as the run target.
 
-터미널에서 Xcode를 열 수 없는 경우 Finder에서 아래 파일을 더블클릭합니다.
+If opening from Terminal does not work, double-click this file in Finder:
 
 ```text
 apps/ios/HanwooPrototype/HanwooPrototype.xcodeproj
 ```
 
-## iOS Simulator 실행 조건
+## Windows Limitation
 
-iOS Simulator는 Xcode에 포함된 macOS 전용 도구입니다. 따라서 Windows에서는 iOS Simulator를 직접 실행할 수 없습니다.
+iOS Simulator is a macOS-only tool included with Xcode. Windows cannot run the iOS simulator directly.
 
-Windows에서 가능한 작업은 다음과 같습니다.
+Windows can still be used for:
 
-- API 서버 실행
-- `packages/domain` 계산/추천 로직 개발
-- TypeScript 타입체크 및 테스트
-- 문서 수정
-- GitHub 업로드 및 코드 리뷰
+- API work.
+- Domain logic work.
+- TypeScript typecheck and tests.
+- Documentation updates.
+- GitHub upload and code review.
 
-Windows에서 iOS 앱을 확인하려면 다음 중 하나가 필요합니다.
+To inspect the iOS app UI without a local Mac, use one of:
 
-- Mac에서 Xcode로 실행
-- Mac mini, MacBook, iMac 등 원격 Mac 사용
-- 클라우드 Mac 서비스 사용
-- TestFlight 또는 실제 기기에 설치된 빌드 공유
+- A Mac running Xcode.
+- A remote Mac.
+- A cloud Mac service.
+- A TestFlight or device build shared from a Mac.
 
-## iOS 프로토타입 범위
+## Current iOS App Status
 
-- Xcode에서 `apps/ios/HanwooPrototype/HanwooPrototype.xcodeproj`를 열어 실행합니다.
-- 현재 단계는 `목데이터 기반 SwiftUI 프로토타입`이며, 실제 API 연동은 포함하지 않습니다.
+- Open `apps/ios/HanwooPrototype/HanwooPrototype.xcodeproj` in Xcode.
+- The current app is a local iOS calculation/recommendation app.
+- Live API integration is not required for the first release path.

@@ -37,103 +37,12 @@ struct AnalysisDetailView: View {
                         MetricTile(title: "TDN", value: percentString(analysis.metrics.tdnPctDm), accent: AppPalette.warning)
                     }
 
-                    SectionCard(title: "원물 투입 현황", subtitle: "원료별 원물 투입량과 건물 환산량") {
+                    SectionCard(title: "영양소 판정", subtitle: "건물(DM) 기준") {
                         VStack(spacing: 0) {
-                            HStack {
-                                Text("원료")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Text("원물량")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: 72, alignment: .trailing)
-                                Text("건물량")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: 80, alignment: .trailing)
+                            ForEach(Array(analysis.statuses.enumerated()), id: \.element.id) { index, status in
+                                if index > 0 { Divider() }
+                                nutrientRow(status)
                             }
-                            .padding(.bottom, 6)
-                            Divider()
-
-                            ForEach(formula.items) { item in
-                                let fedKg = asFedKg(for: item)
-                                let dmKg: Double? = item.definitionID
-                                    .flatMap { store.ingredientDefinition(id: $0)?.nutrition.dmPct }
-                                    .map { fedKg * $0 / 100 }
-                                HStack {
-                                    Text(item.name)
-                                        .font(.subheadline)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                    Text("\(numberString(fedKg))kg")
-                                        .font(.subheadline.monospacedDigit())
-                                        .frame(width: 72, alignment: .trailing)
-                                    if let dm = dmKg {
-                                        Text("\(numberString(dm))kg")
-                                            .font(.subheadline.monospacedDigit())
-                                            .foregroundStyle(.secondary)
-                                            .frame(width: 80, alignment: .trailing)
-                                    } else {
-                                        Text("—")
-                                            .font(.subheadline)
-                                            .foregroundStyle(.tertiary)
-                                            .frame(width: 80, alignment: .trailing)
-                                    }
-                                }
-                                .padding(.vertical, 6)
-                                Divider()
-                            }
-
-                            HStack {
-                                Text("합계")
-                                    .font(.subheadline.bold())
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Text("\(numberString(analysis.metrics.totalAsFedKg))kg")
-                                    .font(.subheadline.bold().monospacedDigit())
-                                    .frame(width: 72, alignment: .trailing)
-                                Text("\(numberString(analysis.metrics.totalDmKg))kg")
-                                    .font(.subheadline.bold().monospacedDigit())
-                                    .foregroundStyle(Color.green)
-                                    .frame(width: 80, alignment: .trailing)
-                            }
-                            .padding(.top, 6)
-                        }
-                    }
-
-                    SectionCard(title: "건물 기준 영양소", subtitle: "DM 기준 영양소 함량 (총 건물량 대비 %)") {
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                            NutrientMetricCell(title: "수분", value: percentString(analysis.metrics.moisturePct))
-                            NutrientMetricCell(title: "Ca:P", value: ratioString(analysis.metrics.caPRatio))
-                            NutrientMetricCell(title: "CP", value: percentString(analysis.metrics.cpPctDm))
-                            NutrientMetricCell(title: "TDN", value: percentString(analysis.metrics.tdnPctDm))
-                            NutrientMetricCell(title: "NDF", value: percentString(analysis.metrics.ndfPctDm))
-                            NutrientMetricCell(title: "ADF", value: percentString(analysis.metrics.adfPctDm))
-                            NutrientMetricCell(title: "NFC", value: percentString(analysis.metrics.nfcPctDm))
-                            NutrientMetricCell(title: "EE", value: percentString(analysis.metrics.eePctDm))
-                            NutrientMetricCell(title: "Ca", value: percentString(analysis.metrics.caPctDm))
-                            NutrientMetricCell(title: "P", value: percentString(analysis.metrics.pPctDm))
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("판정 결과")
-                            .font(.title3.bold())
-                        ForEach(analysis.statuses) { status in
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text(status.nutrient)
-                                        .font(.headline)
-                                    Spacer()
-                                    StatusPill(title: status.tone.title, tone: status.tone)
-                                }
-                                Text("현재 \(status.currentValue) · 기준 \(status.targetValue)")
-                                    .font(.subheadline)
-                                Text(status.message)
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding()
-                            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(AppPalette.surface)).overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(AppPalette.hairline, lineWidth: 1))
                         }
                     }
 
@@ -144,6 +53,15 @@ struct AnalysisDetailView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
+
+                    // 엔진이 찾아주는 안과 별개로, 직접 밀고 당겨보는 경로.
+                    NavigationLink {
+                        AdjustmentSliderView(formulaID: formulaID)
+                    } label: {
+                        Text("직접 증감해보기")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
 
                     Button {
                         store.saveAnalysisSnapshot(for: formula)
@@ -156,11 +74,45 @@ struct AnalysisDetailView: View {
                     .disabled(didSaveSnapshot)
                 }
                 .padding(20)
+                .task {
+                    // 사용 중인 원료 목록만 서버에 남긴다. 투입량은 보내지 않는다.
+                    // 실패해도 화면 동작에는 영향이 없다.
+                    await UsageReportService().report(formula: formula)
+                }
             }
         }
         .background(AppScreenBackground())
         .navigationTitle("분석 결과")
     }
+
+    // MARK: 영양소 한 줄
+
+    private func nutrientRow(_ status: NutrientStatus) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(status.nutrient)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppPalette.ink)
+                    .frame(width: 58, alignment: .leading)
+
+                Text(status.currentValue)
+                    .font(.title3.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(AppPalette.ink)
+
+                Spacer()
+
+                StatusPill(title: status.tone.title, tone: status.tone)
+            }
+
+            // 설명 문구는 두지 않는다. 왜 그런지는 추천안 화면의 AI 설명이 맡고,
+            // 이 화면은 "지금 어떤 상태인가"만 빠르게 훑도록 기준값만 남긴다.
+            Text("기준 \(status.targetValue)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 11)
+    }
+
 }
 
 struct HistoryView: View {
@@ -223,15 +175,17 @@ struct HistoryView: View {
                 Text("저장 당시 배합과 엔진 버전이 함께 기록되어, 이후 앱이 갱신되어도 같은 값이 표시됩니다.")
             }
 
+            // 목록에는 이름과 단계만 쓴다. 분석 결과를 미리 계산하면
+            // 배합 수만큼 교정 엔진이 돌아 목록 진입이 느려진다.
             Section("현재 배합 바로 분석") {
-                ForEach(store.userFacingAnalyses) { analysis in
+                ForEach(store.userFacingFormulas) { formula in
                     NavigationLink {
-                        AnalysisDetailView(formulaID: analysis.formulaId)
+                        AnalysisDetailView(formulaID: formula.id)
                     } label: {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(analysis.formulaName)
+                            Text(formula.name)
                                 .font(.headline)
-                            Text(analysis.stage.title)
+                            Text(formula.stage.title)
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }

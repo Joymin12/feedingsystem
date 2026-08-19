@@ -144,7 +144,7 @@ struct DiaryEditorView: View {
                                 .padding()
                                 .background(
                                     RoundedRectangle(cornerRadius: 18)
-                                        .fill(Color(.secondarySystemBackground))
+                                        .fill(AppPalette.surfaceMuted)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -166,7 +166,7 @@ struct DiaryEditorView: View {
                             TextEditor(text: $note)
                                 .frame(height: 140)
                                 .padding(8)
-                                .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
+                                .background(RoundedRectangle(cornerRadius: 14).fill(AppPalette.surfaceMuted))
                         }
                     }
                 }

@@ -1,36 +1,38 @@
 # User Auth And Ingredient Scope
 
-## 현재 기준
+## Current Baseline
 
-이 앱의 현재 운영 기준은 `로컬 저장 우선`이다.
+The current operating mode is `local persistence first`.
 
-역할 분리:
+Responsibility split:
 
-- `iOS 로컬`
-  - 회원가입
-  - 로그인 / 로그아웃
-  - 사용자 프로필
-  - 사용자별 원료 선택
-  - 커뮤니티 글 저장 / 삭제
-  - 배합 입력
-  - 영양 계산
-  - 복합교정안 추천
-  - 사육일지 / 최근 분석
+- `iOS local`
+  - Sign-up
+  - Login / logout
+  - User profile
+  - User-specific ingredient selection
+  - Community post create/delete
+  - Formula entry
+  - Nutrition calculation
+  - Composite correction recommendation
+  - Diary / recent analysis
+  - User-entered ingredient add/edit/delete
 - `Supabase`
-  - 현재 미사용
-  - 추후 원격 인증/커뮤니티 전환 시 참고용 코드와 문서만 유지
+  - Currently not used in the release path
+  - Kept only as reference code/documentation for future remote auth/community migration
 
-## 사용자 정책
+## User Policy
 
-- 일반 사용자는 이메일로 가입한다.
-- 회원가입 시 자신이 사용하는 원료를 선택할 수 있다.
-- 회원가입에서만 `건너뛰기`가 가능하다.
-- 사용자가 원료를 선택하면 배합 화면의 원료 추가 목록에서 해당 원료만 보인다.
-- 건너뛰면 전체 원료를 본다.
+- Regular users sign up with email.
+- During sign-up, users can select ingredients they use.
+- `Skip` is available only during sign-up.
+- If a user selects ingredients, the formula ingredient-add list shows only those selected catalog ingredients plus their custom ingredients.
+- If the user skips selection, the app shows all catalog ingredients.
+- User-entered ingredients are always visible to their owner and are included in calculation/recommendation.
 
-## 저장 구조
+## Storage Structure
 
-### 로컬 저장
+### Local Storage
 
 - `AppUser`
   - `loginID`
@@ -47,45 +49,56 @@
   - `excerpt`
   - `label`
   - `createdAt`
+- `UserIngredientDefinition`
+  - `id`
+  - `ownerLoginID`
+  - `name`
+  - `category`
+  - `defaultPriceKrwPerKg`
+  - `nutrition`
+  - `createdAt`
 
-### Supabase fallback 코드
+### Supabase Fallback Code
 
-Supabase 설정이 비어 있으면 로컬 저장만 사용한다. 현재 릴리즈 경로에서는 이 상태를 기본으로 본다.
+If Supabase configuration is empty, the app uses local persistence only. This is the default assumption for the current release path.
 
-## 인증 흐름
+## Auth Flow
 
-### 로그인
+### Login
 
-- 이메일 또는 관리자 아이디
-- 비밀번호
+- Email or admin ID.
+- Password.
 
-### 회원가입
+### Sign-Up
 
-- 입력값
-  - 이메일
-  - 비밀번호
-  - 비밀번호 재확인
-  - 자신의 원료 선택
-- 이메일 인증은 현재 로컬 인증코드 생성 방식 유지
+Inputs:
 
-## 커뮤니티 권한
+- Email.
+- Password.
+- Password confirmation.
+- Ingredient selection.
 
-- 일반 사용자
-  - 글 작성 가능
-  - 자신이 쓴 글만 삭제 가능
-- 관리자
-  - 모든 글 삭제 가능
+Email verification currently uses a local verification-code flow.
 
-현재는 로컬 사용자의 `isAdmin = true`로 판정한다.
+## Community Permission
 
-## 관련 코드 파일
+- Regular users:
+  - Can create posts.
+  - Can delete only their own posts.
+- Admin:
+  - Can delete every post.
+
+Current implementation uses the local user's `isAdmin = true`.
+
+## Related Code Files
 
 - `/Users/jowm/Desktop/feedingsystem/apps/ios/HanwooPrototype/HanwooPrototype/HanwooPrototypeApp.swift`
 - `/Users/jowm/Desktop/feedingsystem/apps/ios/HanwooPrototype/HanwooPrototype/SupabaseService.swift`
 - `/Users/jowm/Desktop/feedingsystem/docs/supabase/supabase-auth-community-setup.md`
 
-## 현재 한계
+## Current Limitations
 
-- 현재 관리자 계정 `qwer123 / asdf123`은 로컬 하드코딩 상태다.
-- 비밀번호와 커뮤니티 저장은 로컬 저장이라 실제 출시 전에는 보안/동기화 재검토가 필요하다.
-- 배합 계산 엔진은 여전히 로컬이다. 이것은 의도된 구조다.
+- Admin account `qwer123 / asdf123` is currently hardcoded in local fallback logic.
+- Password and community persistence are local, so security/sync must be revisited before production release.
+- User-entered ingredients are local-only and should eventually move behind a Repository, then to SwiftData/CoreData or server sync.
+- Formula calculation remains local by design.

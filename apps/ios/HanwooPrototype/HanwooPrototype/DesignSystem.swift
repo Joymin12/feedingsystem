@@ -9,23 +9,53 @@ import SwiftUI
 // - 브랜드 그린은 행동(버튼·활성 탭·강조)에만 사용
 // - 상태(부족/주의/적정/과잉)는 색 + 아이콘 + 텍스트를 항상 병기
 
+// 라이트/다크 한 쌍으로 색을 정의한다.
+// 시스템 외양 설정을 따라 자동으로 바뀌므로 화면 코드는 모드를 신경 쓰지 않는다.
+private extension Color {
+    init(light: UIColor, dark: UIColor) {
+        self.init(uiColor: UIColor { trait in
+            trait.userInterfaceStyle == .dark ? dark : light
+        })
+    }
+
+    init(light: (Double, Double, Double), dark: (Double, Double, Double)) {
+        self.init(
+            light: UIColor(red: light.0, green: light.1, blue: light.2, alpha: 1),
+            dark: UIColor(red: dark.0, green: dark.1, blue: dark.2, alpha: 1)
+        )
+    }
+}
+
 enum AppPalette {
-    // 브랜드
-    static let primary = Color(red: 0.07, green: 0.44, blue: 0.26)
-    static let primaryDeep = Color(red: 0.04, green: 0.30, blue: 0.18)
-    static let ink = Color(red: 0.09, green: 0.12, blue: 0.11)
-    static let warning = Color(red: 0.78, green: 0.47, blue: 0.10)
+    // 브랜드 — 흰 바탕에 연두 계열 포인트.
+    // 다크 모드에서는 같은 계열을 한 단계 밝혀 어두운 배경 위에서도 눈에 띄게 한다.
+    static let primary = Color(light: (0.29, 0.60, 0.22), dark: (0.55, 0.82, 0.42))
+    static let primaryDeep = Color(light: (0.18, 0.44, 0.16), dark: (0.38, 0.62, 0.30))
+    static let ink = Color(light: (0.10, 0.13, 0.10), dark: (0.93, 0.95, 0.92))
+    static let warning = Color(light: (0.78, 0.47, 0.10), dark: (0.95, 0.66, 0.28))
 
-    // 표면
-    static let canvas = Color(red: 0.953, green: 0.957, blue: 0.962)
-    static let surface = Color.white
-    static let surfaceMuted = Color(red: 0.965, green: 0.968, blue: 0.972)
-    static let surfaceStrong = Color(red: 0.922, green: 0.936, blue: 0.928)
-    static let hairline = Color.black.opacity(0.06)
+    // 표면 — 라이트는 흰색에 옅은 연두 기운, 다크는 녹색 기운이 도는 짙은 회색
+    static let canvas = Color(light: (0.969, 0.980, 0.961), dark: (0.075, 0.086, 0.075))
+    static let surface = Color(light: (1.0, 1.0, 1.0), dark: (0.125, 0.137, 0.125))
+    static let surfaceMuted = Color(light: (0.949, 0.969, 0.937), dark: (0.157, 0.173, 0.157))
+    static let surfaceStrong = Color(light: (0.906, 0.945, 0.882), dark: (0.184, 0.208, 0.180))
+    static let hairline = Color(
+        light: UIColor.black.withAlphaComponent(0.06),
+        dark: UIColor.white.withAlphaComponent(0.10)
+    )
 
-    // 히어로(홈 상단) 전용
+    // 연두 강조면 — 선택된 칩, 인기 배지 등 브랜드 색 배경이 필요할 때
+    static let accentSoft = Color(light: (0.898, 0.957, 0.847), dark: (0.157, 0.227, 0.129))
+
+    // 브랜드 색 위에 올라가는 글자. 다크 모드의 primary는 밝은 연두라 흰 글자가 묻힌다.
+    static let onPrimary = Color(light: (1.0, 1.0, 1.0), dark: (0.04, 0.10, 0.04))
+
+    // 히어로(홈 상단) 전용 — 흰 글자를 얹으므로 두 모드 모두 짙은 녹색을 유지한다
     static let heroGradient = LinearGradient(
-        colors: [primary, primaryDeep],
+        colors: [
+            Color(light: (0.24, 0.52, 0.20), dark: (0.16, 0.34, 0.14)),
+            Color(light: (0.14, 0.36, 0.13), dark: (0.10, 0.24, 0.10)),
+        ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
@@ -179,7 +209,7 @@ struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline)
-            .foregroundStyle(.white)
+            .foregroundStyle(AppPalette.onPrimary)
             .padding(.vertical, 15)
             .frame(maxWidth: .infinity)
             .background(

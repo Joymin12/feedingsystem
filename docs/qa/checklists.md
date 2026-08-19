@@ -1,47 +1,53 @@
-# QA / 리뷰 체크리스트
+# QA / Review Checklist
 
-## 코드리뷰 공통
+## General Code Review
 
-- `farm_id` 스코프가 빠진 쿼리가 없는가
-- enum 값이 OpenAPI/DB/TS 타입에서 일치하는가
-- append-only 테이블에 update/delete 경로가 없는가
-- 스냅샷 테이블이 재현 가능한 입력값을 모두 저장하는가
-- 파괴적 마이그레이션이 아닌가
-- 테스트가 실패 경로까지 포함하는가
+- Are calculation rules preserved during refactor?
+- Are growth-stage criteria unchanged unless explicitly approved?
+- Are enum values consistent across OpenAPI, DB, TypeScript, and Swift models where applicable?
+- Are snapshot-style records reproducible from stored inputs?
+- Is there any destructive migration or data-loss path?
+- Do tests or manual checks include failure and edge cases?
 
-## DB 변경
+## DB Changes
 
-- 변경 이유가 문서화되었는가
-- 롤백 방법이 명시되었는가
-- 백필 또는 데이터 이행 절차가 필요한가
-- 인덱스/partial unique/check 제약이 성능과 무결성에 맞는가
+- Is the reason for the change documented?
+- Is rollback or recovery described?
+- Is backfill or data migration required?
+- Do indexes, partial unique constraints, and check constraints match performance and integrity needs?
 
-## 분석 엔진
+## Analysis Engine
 
-- DM, 수분, CP, TDN, NDF, ADF, Ca, P 계산이 고정 fixture와 일치하는가
-- 목표값 스냅샷이 함께 저장되는가
-- 상태값이 `deficient|adequate|excess`로 고정되는가
-- warning 코드와 severity가 일관적인가
+- Do DM, moisture, CP, TDN, EE, NDF, ADF, Ca, and P calculations match fixed fixtures?
+- Is Ca:P calculated as a ratio, not a percentage?
+- Are target criteria snapshots stored or reproducible?
+- Are statuses consistently classified as deficient, caution, adequate, or excess?
+- Are warning messages and severity levels consistent?
 
-## 추천 엔진
+## Recommendation Engine
 
-- 금지 원료가 후보에 포함되지 않는가
-- preference와 inventory가 점수에 반영되는가
-- Top 3가 score 순으로 정렬되는가
-- 이유/주의/대체 문구가 비어 있지 않은가
+- Are recommendation candidates limited to ingredients actually present in the current formula?
+- Are user-entered `USER_...` ingredients included when they have nutrition profiles?
+- Are ingredients without `definitionID` excluded from recommendation candidates?
+- Is the final total as-fed kg normalized back to the user's original total?
+- Does the UI show only one primary recommendation?
+- Are explanation, caution, and projected-result fields non-empty?
 
-## 프론트
+## Frontend
 
-- 모바일 기준으로 입력 CTA가 항상 보이는가
-- 서버 실패 시 입력값이 유지되는가
-- 클라이언트가 계산 결과를 임의로 재가공하지 않는가
-- memo 저장 성공/실패 상태가 명확한가
+- Is the primary input CTA visible on mobile?
+- Are user-entered values preserved after navigation or validation errors?
+- Does the client avoid inventing nutrient results outside the app engine?
+- Are save success/failure states clear?
+- Can users add, edit, and delete custom ingredients?
 
-## E2E 핵심 시나리오
+## Core E2E Scenarios
 
-- 회원 로그인 후 내 농장 프로필 조회
-- 저장 배합 생성과 조회
-- formula 기반 분석 생성
-- ad-hoc 분석 생성
-- 추천 메모 저장과 이력 조회
-- 타 농장 데이터 접근 시 403 반환
+- User signs up and selects ingredients.
+- User skips ingredient selection and sees all catalog ingredients.
+- User creates a formula and runs analysis.
+- User adds a custom ingredient with nutrition values and sees it in calculation.
+- User edits a custom ingredient and formula calculation changes accordingly.
+- User deletes a custom ingredient and stale formula references are removed.
+- A primary recommendation is generated for representative formulas.
+- Admin can delete all community posts; regular users can delete only their own posts.

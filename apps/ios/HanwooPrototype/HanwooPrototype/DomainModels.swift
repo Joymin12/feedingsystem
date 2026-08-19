@@ -443,6 +443,32 @@ struct SavedAnalysis: Identifiable, Codable {
     var recommendations: [Recommendation]
 }
 
+// MARK: - 원료 가계부
+//
+// 농가는 원료를 살 때마다 단가가 달라진다. 언제 얼마에 몇 kg을 샀는지 남겨두면
+// 실제 사료비를 파악할 수 있고, 남은 양을 알면 다음 구매 시점을 가늠할 수 있다.
+//
+// 재고를 자동 차감하지 않는 이유: 배합표는 '설계'이고 실제 급여량은 날마다 다르다.
+// 앱이 임의로 빼면 실제 창고와 어긋나므로, 남은 양은 농가가 직접 조정한다.
+struct FeedPurchase: Identifiable, Codable {
+    var id = UUID()
+    /// 카탈로그 원료와 연결되면 배합 화면 단가와 이어 볼 수 있다. 직접 입력이면 nil.
+    var ingredientID: String?
+    var ingredientName: String
+    var purchasedAt: Date
+    var quantityKg: Double
+    var unitPriceKrwPerKg: Int
+    /// 남은 양. 초기값은 구매량이며 농가가 직접 줄여 나간다.
+    var remainingKg: Double
+    var vendor: String
+    var memo: String
+
+    var totalCostKrw: Int { Int((quantityKg * Double(unitPriceKrwPerKg)).rounded()) }
+    /// 남은 양의 금액 환산. 창고에 묶여 있는 돈이 얼마인지 보여준다.
+    var remainingValueKrw: Int { Int((remainingKg * Double(unitPriceKrwPerKg)).rounded()) }
+    var isDepleted: Bool { remainingKg <= 0.05 }
+}
+
 struct RegressionCheck: Identifiable {
     let id = UUID()
     var title: String
@@ -509,6 +535,29 @@ struct CommunityPost: Identifiable, Codable, Equatable {
     var authorLoginID: String
     var authorDisplayName: String
     var createdAt: Date
+    /// 글에 붙인 배합 기록. 첨부하지 않으면 nil.
+    var attachedFormula: AttachedFormula?
+
+    /// 글에 첨부하는 배합 스냅샷.
+    ///
+    /// 원본 배합을 참조하지 않고 사본을 넣는다. 글쓴이가 나중에 자기 배합을 고쳐도
+    /// 게시글에 남은 기록은 글을 쓴 그 시점 그대로여야 하기 때문이다.
+    /// "이렇게 먹였더니 이랬다"는 글에서 배합이 나중에 바뀌면 글의 근거가 사라진다.
+    struct AttachedFormula: Codable, Equatable {
+        var name: String
+        var stageTitle: String
+        var totalAsFedKg: Double
+        var items: [Line]
+        /// 첨부 시점의 주요 영양소. 보는 사람이 성분까지 함께 볼 수 있게 담는다.
+        var cpPctDm: Double
+        var tdnPctDm: Double
+        var moisturePct: Double
+
+        struct Line: Codable, Equatable {
+            var name: String
+            var amountKg: Double
+        }
+    }
 
     init(
         id: UUID = UUID(),
@@ -517,7 +566,8 @@ struct CommunityPost: Identifiable, Codable, Equatable {
         label: String,
         authorLoginID: String,
         authorDisplayName: String,
-        createdAt: Date = .now
+        createdAt: Date = .now,
+        attachedFormula: AttachedFormula? = nil
     ) {
         self.id = id
         self.title = title
@@ -526,6 +576,7 @@ struct CommunityPost: Identifiable, Codable, Equatable {
         self.authorLoginID = authorLoginID
         self.authorDisplayName = authorDisplayName
         self.createdAt = createdAt
+        self.attachedFormula = attachedFormula
     }
 }
 

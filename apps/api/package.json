@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput & node --watch --env-file-if-exists=.env dist/apps/api/src/main.js",
+    "dev:fast": "tsx watch --env-file-if-exists=.env src/main.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/apps/api/src/main.js",
     "lint": "tsc -p tsconfig.json --noEmit",

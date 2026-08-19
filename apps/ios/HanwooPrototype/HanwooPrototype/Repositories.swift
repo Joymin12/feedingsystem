@@ -33,6 +33,11 @@ protocol AnalysisHistoryRepository {
     func saveAnalyses(_ analyses: [SavedAnalysis])
 }
 
+protocol PurchaseRepository {
+    func loadPurchases() -> [FeedPurchase]
+    func savePurchases(_ purchases: [FeedPurchase])
+}
+
 // 배열 디코딩 시 손상된 레코드 하나 때문에 전체를 잃지 않도록 요소 단위로 복구한다.
 // 디코딩에 실패한 요소는 건너뛰고 로그만 남긴다.
 private struct FailableRecord<T: Decodable>: Decodable {
@@ -70,6 +75,7 @@ private enum StorageKey {
     static let userIngredients = "hanwoo.prototype.userIngredients"
     static let formulas = "hanwoo.prototype.formulas"
     static let analysisHistory = "hanwoo.prototype.analysisHistory"
+    static let purchases = "hanwoo.prototype.purchases"
 }
 
 struct UserDefaultsUserRepository: UserRepository {
@@ -165,6 +171,27 @@ struct UserDefaultsAnalysisHistoryRepository: AnalysisHistoryRepository {
             return
         }
         defaults.set(data, forKey: StorageKey.analysisHistory)
+    }
+}
+
+struct UserDefaultsPurchaseRepository: PurchaseRepository {
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    func loadPurchases() -> [FeedPurchase] {
+        guard let data = defaults.data(forKey: StorageKey.purchases) else { return [] }
+        return decodeRecords(FeedPurchase.self, from: data, label: "원료 구매 기록")
+    }
+
+    func savePurchases(_ purchases: [FeedPurchase]) {
+        guard let data = try? JSONEncoder().encode(purchases) else {
+            repositoryLogger.error("원료 구매 기록 저장 인코딩에 실패했습니다.")
+            return
+        }
+        defaults.set(data, forKey: StorageKey.purchases)
     }
 }
 

@@ -36,6 +36,13 @@ struct FarmView: View {
                 .buttonStyle(.plain)
 
                 NavigationLink {
+                    LedgerView()
+                } label: {
+                    QuickActionCard(title: "원료 가계부", subtitle: "구매 기록과 남은 원료", icon: "wonsign.circle.fill")
+                }
+                .buttonStyle(.plain)
+
+                NavigationLink {
                     UserIngredientManagementView()
                 } label: {
                     QuickActionCard(title: "내 원료 관리", subtitle: "직접 입력한 원료 성분 수정", icon: "tray.full.fill")
