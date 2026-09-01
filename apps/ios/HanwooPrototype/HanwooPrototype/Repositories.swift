@@ -26,6 +26,9 @@ protocol UserIngredientRepository {
 protocol FormulaRepository {
     func loadFormulas() -> [FeedFormula]
     func saveFormulas(_ formulas: [FeedFormula])
+    /// 대표 배합. 홈과 배합 화면이 기본으로 여는 배합 하나를 가리킨다.
+    func loadSelectedFormulaID() -> UUID?
+    func saveSelectedFormulaID(_ id: UUID)
 }
 
 protocol AnalysisHistoryRepository {
@@ -76,6 +79,7 @@ private enum StorageKey {
     static let formulas = "hanwoo.prototype.formulas"
     static let analysisHistory = "hanwoo.prototype.analysisHistory"
     static let purchases = "hanwoo.prototype.purchases"
+    static let selectedFormulaID = "hanwoo.prototype.selectedFormulaID"
 }
 
 struct UserDefaultsUserRepository: UserRepository {
@@ -150,6 +154,15 @@ struct UserDefaultsFormulaRepository: FormulaRepository {
             return
         }
         defaults.set(data, forKey: StorageKey.formulas)
+    }
+
+    func loadSelectedFormulaID() -> UUID? {
+        guard let raw = defaults.string(forKey: StorageKey.selectedFormulaID) else { return nil }
+        return UUID(uuidString: raw)
+    }
+
+    func saveSelectedFormulaID(_ id: UUID) {
+        defaults.set(id.uuidString, forKey: StorageKey.selectedFormulaID)
     }
 }
 

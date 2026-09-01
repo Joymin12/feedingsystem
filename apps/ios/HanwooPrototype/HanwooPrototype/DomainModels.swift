@@ -635,3 +635,19 @@ struct IngredientNutritionProfile: Codable, Equatable {
     var caPctDm: Double
     var pPctDm: Double
 }
+
+
+/// 소셜 로그인 제공자. 프로토타입에서는 로컬 세션으로만 동작한다.
+enum SocialLoginProvider: String {
+    case kakao
+    case naver
+    case apple
+
+    var title: String {
+        switch self {
+        case .kakao: "카카오"
+        case .naver: "네이버"
+        case .apple: "Apple"
+        }
+    }
+}

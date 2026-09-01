@@ -219,7 +219,7 @@ struct AdjustmentSliderView: View {
                     .font(.subheadline.monospacedDigit())
                     .foregroundStyle(AppPalette.ink)
                 if abs(delta) >= 0.05 {
-                    Text("\(delta > 0 ? "+" : "−")\(numberString(abs(delta)))")
+                    Text("\(delta > 0 ? "+" : "−")\(numberString(abs(delta)))kg")
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(delta > 0 ? AppPalette.primary : AppPalette.warning)
                 }

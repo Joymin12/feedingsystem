@@ -225,10 +225,14 @@ struct AIRecommendationView: View {
 
             Spacer(minLength: 8)
 
-            Text("\(isIncrease ? "+" : "−")\(numberString(action.amountKg))")
-                .font(.system(size: 17, weight: .bold))
-                .monospacedDigit()
-                .foregroundStyle(isIncrease ? AppPalette.primary : AppPalette.alert)
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text("\(isIncrease ? "+" : "−")\(numberString(action.amountKg))")
+                    .font(.system(size: 17, weight: .bold))
+                    .monospacedDigit()
+                Text("kg")
+                    .font(.system(size: 13, weight: .semibold))
+            }
+            .foregroundStyle(isIncrease ? AppPalette.primary : AppPalette.alert)
         }
         .padding(.vertical, 14)
         .accessibilityElement(children: .combine)
@@ -344,6 +348,12 @@ struct AIRecommendationView: View {
             analysis: analysis,
             formula: formula,
             asFedKg: { asFedKg(for: $0) },
+            // 화면의 "적용 후 예상"과 같은 판정을 보낸다.
+            afterStatuses: store.buildStatuses(
+                stage: formula.stage,
+                criteria: formula.stage.criteria,
+                metrics: primary.simulatedMetrics
+            ),
             limitationOverride: limitation
         )
         do {

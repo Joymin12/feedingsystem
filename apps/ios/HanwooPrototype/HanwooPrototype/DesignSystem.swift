@@ -218,7 +218,8 @@ struct QuickActionCard: View {
 }
 
 /// 상태 표시. 배경을 깐 배지 대신 작은 글자로 적는다.
-/// 문제가 있는 항목만 색을 쓰고, 주의와 적정은 회색으로 둬서 화면이 조용하게 유지된다.
+/// 판정마다 색을 달리해 목록을 훑을 때 색만으로도 읽히게 한다.
+/// 적정=초록, 주의=노랑, 부족·과잉=빨강. 색은 이 셋에서 늘리지 않는다.
 struct StatusPill: View {
     let title: String
     let tone: StatusTone
@@ -226,7 +227,8 @@ struct StatusPill: View {
     private var textColor: Color {
         switch tone {
         case .deficient, .excess: AppPalette.alert
-        case .caution, .adequate: AppPalette.subtle
+        case .caution: AppPalette.warning
+        case .adequate: AppPalette.primary
         }
     }
 

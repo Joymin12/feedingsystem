@@ -5,6 +5,7 @@ import SwiftUI
 struct BlendView: View {
     @EnvironmentObject private var store: PrototypeStore
     @State private var isShowingIngredientSheet = false
+    @State private var isShowingFormulaList = false
 
     private func binding(for id: UUID) -> Binding<FeedFormula>? {
         guard let index = store.formulas.firstIndex(where: { $0.id == id }) else { return nil }
@@ -22,9 +23,25 @@ struct BlendView: View {
 
                 VStack(alignment: .leading, spacing: 0) {
                     // 제목 — 배합 이름을 그대로 큰 글자로 쓴다.
-                    TextField("배합 이름", text: formula.name)
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(AppPalette.ink)
+                    // 오른쪽 버튼으로 다른 배합으로 갈아탄다. 지금 열려 있는 배합이 대표 배합이다.
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        TextField("배합 이름", text: formula.name)
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundStyle(AppPalette.ink)
+
+                        Button {
+                            isShowingFormulaList = true
+                        } label: {
+                            HStack(spacing: 5) {
+                                Text("\(store.selectableFormulas.count)")
+                                    .font(.system(size: 14, weight: .semibold))
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 11, weight: .semibold))
+                            }
+                            .foregroundStyle(AppPalette.primary)
+                        }
+                        .accessibilityLabel("배합 바꾸기")
+                    }
 
                     Text(formula.wrappedValue.stage.title + " 기준")
                         .font(.footnote)
@@ -123,6 +140,10 @@ struct BlendView: View {
         }
         .background(AppScreenBackground())
         .navigationTitle("배합")
+        .sheet(isPresented: $isShowingFormulaList) {
+            FormulaSwitcherSheet()
+                .environmentObject(store)
+        }
         .sheet(isPresented: $isShowingIngredientSheet) {
             let formulaID = store.preferredSelectedFormulaID()
             IngredientPickerSheet(formulaID: formulaID)
@@ -369,5 +390,89 @@ struct IngredientAmountEditor: View {
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 18).fill(AppPalette.surfaceMuted))
+    }
+}
+
+
+// MARK: - 배합 전환
+//
+// 대표 배합을 고르는 화면. 홈과 배합 화면이 여기서 고른 배합 하나를 함께 본다.
+
+struct FormulaSwitcherSheet: View {
+    @EnvironmentObject private var store: PrototypeStore
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    HairlineDivider()
+                    ForEach(store.selectableFormulas) { formula in
+                        row(formula)
+                        HairlineDivider()
+                    }
+
+                    Button {
+                        let stage = store.selectedStage ?? .growing
+                        store.createFormula(name: "\(stage.title) 배합", stage: stage)
+                        dismiss()
+                    } label: {
+                        Text("+ 새 배합")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(AppPalette.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 16)
+                    }
+                }
+                .padding(.horizontal, 22)
+                .padding(.bottom, 24)
+            }
+            .background(AppScreenBackground())
+            .navigationTitle("배합 선택")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("닫기") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func row(_ formula: FeedFormula) -> some View {
+        let isSelected = formula.id == store.selectedFormulaID
+        return Button {
+            store.selectFormula(formula.id)
+            dismiss()
+        } label: {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(formula.name)
+                        .font(.system(size: 15, weight: isSelected ? .bold : .regular))
+                        .foregroundStyle(AppPalette.ink)
+                    Text("\(formula.stage.title) · 원료 \(formula.items.count)")
+                        .font(.system(size: 12))
+                        .foregroundStyle(AppPalette.subtle)
+                }
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(AppPalette.primary)
+                }
+            }
+            .padding(.vertical, 15)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            // 배합이 하나뿐이면 지울 대상이 없다.
+            if store.selectableFormulas.count > 1 {
+                Button(role: .destructive) {
+                    store.deleteFormula(id: formula.id)
+                } label: {
+                    Label("삭제", systemImage: "trash")
+                }
+            }
+        }
     }
 }

@@ -34,15 +34,10 @@ struct IngredientOnboardingView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("쓰고 있는 \(category.rawValue)를 골라주세요")
-                                .font(.title3.bold())
-                                .foregroundStyle(AppPalette.ink)
-                            Text("많은 농가가 쓰는 원료가 위에 있습니다. 나중에 내 농장에서 바꿀 수 있습니다.")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.top, 18)
+                        Text("쓰고 있는 \(category.rawValue)")
+                            .font(.title2.bold())
+                            .foregroundStyle(AppPalette.ink)
+                            .padding(.top, 18)
 
                         chipGrid
                     }
@@ -224,5 +219,194 @@ struct UsageStatsService {
             decoded.items.map { ($0.ingredientId, $0.farmCount) },
             uniquingKeysWith: { first, _ in first }
         )
+    }
+}
+
+
+// MARK: - 첫 실행 온보딩
+//
+// 사육 단계 하나, 그다음 카테고리별 원료를 차례로 고른다.
+// 회원가입 화면 안에 두면 로그인을 건너뛴 사용자는 한 번도 보지 못하므로
+// 앱에 처음 들어온 시점에 별도 화면으로 세운다.
+
+struct OnboardingFlowView: View {
+    @EnvironmentObject private var store: PrototypeStore
+
+    /// 0은 사육 단계, 1부터는 원료 카테고리.
+    @State private var stepIndex = 0
+    @State private var stage: FarmStage = .growing
+    @State private var selection: Set<String> = []
+    @State private var popularity: [String: Int] = [:]
+
+    private var categories: [IngredientCategory] { IngredientCategory.allCases }
+    private var totalSteps: Int { categories.count + 1 }
+    private var isLastStep: Bool { stepIndex == totalSteps - 1 }
+    private var category: IngredientCategory? {
+        stepIndex == 0 ? nil : categories[stepIndex - 1]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            progressHeader
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    if let category {
+                        Text("쓰고 있는 \(category.rawValue)")
+                            .font(.title2.bold())
+                            .foregroundStyle(AppPalette.ink)
+                            .padding(.top, 18)
+                        chipGrid(for: category)
+                    } else {
+                        Text("주 사육 단계")
+                            .font(.title2.bold())
+                            .foregroundStyle(AppPalette.ink)
+                            .padding(.top, 18)
+                        stageChoices
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 24)
+            }
+
+            bottomBar
+        }
+        .background(AppPalette.canvas.ignoresSafeArea())
+        .task {
+            popularity = await UsageStatsService().popularity()
+        }
+    }
+
+    private var progressHeader: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<totalSteps, id: \.self) { index in
+                Capsule()
+                    .fill(index <= stepIndex ? AppPalette.primary : AppPalette.surfaceStrong)
+                    .frame(height: 5)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: stepIndex)
+        .accessibilityLabel("\(totalSteps)단계 중 \(stepIndex + 1)단계")
+    }
+
+    private var stageChoices: some View {
+        VStack(spacing: 10) {
+            ForEach(FarmStage.allCases) { item in
+                Button {
+                    stage = item
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: stage == item ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(stage == item ? AppPalette.primary : Color.secondary)
+                        Text(item.title)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(AppPalette.ink)
+                        Spacer()
+                    }
+                    .padding(.vertical, 16)
+                    .padding(.horizontal, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(stage == item ? AppPalette.accentSoft : AppPalette.surface)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(stage == item ? AppPalette.primary : AppPalette.hairline,
+                                    lineWidth: stage == item ? 1.5 : 1)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func chipGrid(for category: IngredientCategory) -> some View {
+        let definitions = sortedDefinitions(for: category)
+        return LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+            ForEach(definitions) { definition in
+                chip(definition, isPopular: isPopular(definition, in: definitions))
+            }
+        }
+    }
+
+    private func chip(_ definition: IngredientDefinition, isPopular: Bool) -> some View {
+        let isSelected = selection.contains(definition.id)
+        return Button {
+            if isSelected {
+                selection.remove(definition.id)
+            } else {
+                selection.insert(definition.id)
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isSelected ? AppPalette.primary : Color.secondary)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(definition.name)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppPalette.ink)
+                        .multilineTextAlignment(.leading)
+                    if isPopular {
+                        Text("인기")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(AppPalette.primary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(isSelected ? AppPalette.accentSoft : AppPalette.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(isSelected ? AppPalette.primary : AppPalette.hairline,
+                            lineWidth: isSelected ? 1.5 : 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(definition.name)\(isPopular ? ", 인기 원료" : "")\(isSelected ? ", 선택됨" : "")")
+    }
+
+    private var bottomBar: some View {
+        HStack(spacing: 12) {
+            if stepIndex > 0 {
+                Button("이전") { stepIndex -= 1 }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .frame(width: 110)
+            }
+
+            Button(isLastStep ? "시작하기" : "다음") {
+                if isLastStep {
+                    store.completeOnboarding(stage: stage, selectedIngredientIDs: Array(selection))
+                } else {
+                    stepIndex += 1
+                }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .background(AppPalette.surface.ignoresSafeArea(edges: .bottom))
+    }
+
+    private func sortedDefinitions(for category: IngredientCategory) -> [IngredientDefinition] {
+        let definitions = store.definitions(for: category)
+        guard !popularity.isEmpty else { return definitions }
+        return definitions.sorted {
+            let a = popularity[$0.id] ?? 0
+            let b = popularity[$1.id] ?? 0
+            if a != b { return a > b }
+            return $0.name < $1.name
+        }
+    }
+
+    private func isPopular(_ definition: IngredientDefinition, in sorted: [IngredientDefinition]) -> Bool {
+        guard (popularity[definition.id] ?? 0) > 0 else { return false }
+        return sorted.prefix(3).contains { $0.id == definition.id }
     }
 }

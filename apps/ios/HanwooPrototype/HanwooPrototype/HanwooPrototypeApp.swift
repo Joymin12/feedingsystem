@@ -15,16 +15,16 @@ struct HanwooPrototypeApp: App {
 struct RootView: View {
     @EnvironmentObject private var store: PrototypeStore
 
-    /// 임시: 디자인 작업 중에는 로그인 게이트를 건너뛴다.
-    /// 출시 전에 false로 되돌리거나 이 플래그 자체를 제거할 것.
-    private let skipsAuthGateForDesignWork = true
+    /// 디자인 작업 동안 잠시 끄던 로그인 게이트를 되살렸다.
+    /// 소셜 로그인 화면이 첫 화면이다.
+    private let skipsAuthGateForDesignWork = false
 
     var body: some View {
         Group {
             if !store.isAuthenticated {
                 AuthGatewayView()
             } else if !store.hasCompletedOnboarding {
-                StageOnboardingView()
+                OnboardingFlowView()
             } else {
                 MainTabView()
             }
@@ -33,9 +33,6 @@ struct RootView: View {
         .onAppear {
             guard skipsAuthGateForDesignWork, !store.isAuthenticated else { return }
             _ = store.login(loginID: "qwer123", password: "asdf123")
-            if store.selectedStage == nil {
-                store.selectedStage = .fatteningEarly
-            }
         }
     }
 }

@@ -34,6 +34,8 @@ struct AIExplanationRequest: Encodable {
     let formulaName: String?
     let totalAsFedKg: Double
     let judgements: [Judgement]
+    /// 조정안을 적용했을 때의 판정. 결과 상태를 설명하고 가드레일 오탐을 막는다.
+    let afterJudgements: [Judgement]?
     let actions: [Action]
     let limitationNote: String?
     let engineSummary: String?
@@ -106,6 +108,7 @@ extension AIExplanationRequest {
         analysis: AnalysisRun,
         formula: FeedFormula,
         asFedKg: (IngredientLine) -> Double,
+        afterStatuses: [NutrientStatus] = [],
         limitationOverride: String? = nil
     ) {
         let stage = formula.stage
@@ -157,6 +160,35 @@ extension AIExplanationRequest {
                       min: criteria.moistureBand.minimum, max: criteria.moistureBand.maximum),
         ]
 
+        // 적용 후 판정. 화면의 "참고안 적용 후 예상"과 같은 값을 보낸다.
+        let afterMetrics = recommendation.simulatedMetrics
+        let afterByNutrient = Dictionary(
+            afterStatuses.map { ($0.nutrient, $0.tone) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        func afterJudgement(key: String, label: String, value: Double) -> Judgement? {
+            guard let tone = afterByNutrient[key] ?? afterByNutrient[label] else { return nil }
+            return Judgement(
+                key: key,
+                label: label,
+                value: (value * 10).rounded() / 10,
+                bandMin: nil,
+                bandMax: nil,
+                status: tone.rawValue
+            )
+        }
+        let afterCandidates: [Judgement?] = afterStatuses.isEmpty ? [] : [
+            afterJudgement(key: "CP", label: "CP", value: afterMetrics.cpPctDm),
+            afterJudgement(key: "TDN", label: "TDN", value: afterMetrics.tdnPctDm),
+            afterJudgement(key: "EE", label: "EE", value: afterMetrics.eePctDm),
+            afterJudgement(key: "NDF", label: "NDF", value: afterMetrics.ndfPctDm),
+            afterJudgement(key: "ADF", label: "ADF", value: afterMetrics.adfPctDm),
+            afterJudgement(key: "Ca", label: "Ca", value: afterMetrics.caPctDm),
+            afterJudgement(key: "P", label: "P", value: afterMetrics.pPctDm),
+            afterJudgement(key: "Ca:P", label: "Ca:P", value: afterMetrics.caPRatio),
+            afterJudgement(key: "수분", label: "수분", value: afterMetrics.moisturePct),
+        ]
+
         // 화면의 "기존 kg → 적용 후 kg" 표시와 같은 방식으로 계산한다.
         let actions: [Action] = recommendation.correctionActions.map { action in
             let before = formula.items
@@ -185,6 +217,7 @@ extension AIExplanationRequest {
             formulaName: formula.name,
             totalAsFedKg: (metrics.totalAsFedKg * 10).rounded() / 10,
             judgements: candidates.compactMap { $0 },
+            afterJudgements: afterStatuses.isEmpty ? nil : afterCandidates.compactMap { $0 },
             actions: actions,
             limitationNote: limitationOverride ?? (recommendation.isFullyResolved ? nil : recommendation.reason),
             engineSummary: analysis.summary

@@ -60,7 +60,9 @@ struct HomeView: View {
             .padding(.bottom, 28)
         }
         .background(AppScreenBackground())
-        .navigationTitle("홈")
+        // 제목 "홈"은 두지 않는다. 농장 이름과 단계가 이미 제목 노릇을 한다.
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     // MARK: 현재 배합 요약
@@ -116,7 +118,7 @@ struct HomeView: View {
             AnalysisDetailView(formulaID: formula.id)
         } label: {
             VStack(alignment: .leading, spacing: 0) {
-                Text("현재 배합")
+                Text("대표 배합")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(AppPalette.subtle)
                     .padding(.top, 30)

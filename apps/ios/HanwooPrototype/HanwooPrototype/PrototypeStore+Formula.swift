@@ -66,6 +66,45 @@ extension PrototypeStore {
         formulas[index].items.removeAll(where: { $0.id == ingredientID })
     }
 
+    /// 대표 배합 후보. 엔진 검증용 테스트 배합은 관리자에게도 여기 나오지 않는다.
+    /// 검증은 내 농장 > 엔진 검증 화면에서 따로 한다.
+    var selectableFormulas: [FeedFormula] {
+        formulas.filter { !$0.isTestFormula }
+    }
+
+    // MARK: 대표 배합
+
+    /// 대표 배합을 바꾼다. 홈과 배합 화면이 함께 이 배합을 본다.
+    func selectFormula(_ id: UUID) {
+        guard formulas.contains(where: { $0.id == id }) else { return }
+        selectedFormulaID = id
+    }
+
+    /// 빈 배합을 새로 만들고 곧바로 대표로 삼는다.
+    @discardableResult
+    func createFormula(name: String, stage: FarmStage) -> UUID {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let formula = FeedFormula(
+            name: trimmed.isEmpty ? "새 배합" : trimmed,
+            stage: stage,
+            items: [],
+            checkedAt: .now
+        )
+        formulas.append(formula)
+        selectedFormulaID = formula.id
+        return formula.id
+    }
+
+    /// 배합을 지운다. 화면에 보이는 배합이 하나뿐이면 지우지 않는다.
+    /// 대표 배합을 지웠으면 남은 첫 배합을 대표로 넘긴다.
+    func deleteFormula(id: UUID) {
+        guard selectableFormulas.count > 1 else { return }
+        formulas.removeAll { $0.id == id }
+        if selectedFormulaID == id, let next = selectableFormulas.first {
+            selectedFormulaID = next.id
+        }
+    }
+
     func formula(for id: UUID) -> FeedFormula? {
         formulas.first(where: { $0.id == id })
     }

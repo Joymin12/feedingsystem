@@ -47,6 +47,11 @@ function allowedNumbers(payload: CreateExplanationDto): Set<number> {
     add(j.bandMin);
     add(j.bandMax);
   }
+  for (const j of payload.afterJudgements ?? []) {
+    add(j.value);
+    add(j.bandMin);
+    add(j.bandMax);
+  }
   for (const a of payload.actions) {
     add(a.fromKg);
     add(a.toKg);
@@ -83,16 +88,26 @@ export function checkExplanation(
   }
 
   // 2. 판정 번복
+  //
+  // 조정을 적용하면 판정이 바뀌는 항목이 있다(예: P 적정 → 과잉).
+  // AI가 결과 상태를 설명하는 것은 정확한 문장이므로,
+  // 적용 전 판정과 적용 후 판정 어느 쪽과도 맞지 않는 표현만 위반으로 본다.
+  const afterStatusByKey = new Map(
+    (payload.afterJudgements ?? []).map((j) => [j.key, j.status]),
+  );
   for (const j of payload.judgements) {
     const label = escapeRegExp(j.label);
     const key = escapeRegExp(j.key);
     const near = `(?:${label}|${key})[^.!?\\n]{0,24}`;
 
-    // 적정인 항목을 부족/과잉이라 하거나, 그 반대인 경우만 잡는다.
     // 주의(caution)는 표현 폭이 넓어 오탐이 많으므로 검사에서 뺀다.
     if (j.status === "caution") continue;
-    const conflicting: readonly string[] =
-      j.status === "adequate" ? OFF_BAND_WORDS : ADEQUATE_WORDS;
+    const statuses = new Set([j.status, afterStatusByKey.get(j.key) ?? j.status]);
+    const inBand = statuses.has("adequate");
+    const offBand = statuses.has("deficient") || statuses.has("excess");
+    // 전/후에 적정과 이탈이 다 있으면 어느 표현이든 근거가 있다.
+    if (inBand && offBand) continue;
+    const conflicting: readonly string[] = inBand ? OFF_BAND_WORDS : ADEQUATE_WORDS;
 
     for (const word of conflicting) {
       const re = new RegExp(`${near}${escapeRegExp(word)}`);

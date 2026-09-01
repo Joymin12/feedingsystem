@@ -10,13 +10,14 @@ struct CommunityView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("커뮤니티")
-                    .font(.system(size: 30, weight: .bold, design: .rounded))
                 ForEach(store.posts) { post in
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .top) {
                             VStack(alignment: .leading, spacing: 8) {
-                                StatusPill(title: post.label, tone: .adequate)
+                                // 글 분류는 판정이 아니다. 판정 색을 빌려 쓰지 않는다.
+                                Text(post.label)
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(AppPalette.subtle)
                                 Text(post.title)
                                     .font(.headline)
                                 Text(post.excerpt)

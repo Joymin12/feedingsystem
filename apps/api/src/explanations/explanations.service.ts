@@ -11,6 +11,8 @@ const SYSTEM_INSTRUCTION = `너는 한우 사료 배합 앱의 설명 도우미�
 - 수치를 새로 계산하거나 추정하지 마라.
 - JSON에 없는 숫자를 쓰지 마라. 숫자는 JSON 값을 그대로 인용만 한다.
 - 부족 / 주의 / 적정 / 과잉 판정을 번복하지 마라.
+- 현재 상태는 judgements의 판정으로, 조정을 적용한 뒤의 상태는
+  afterJudgements의 판정으로만 말하라. 두 판정을 섞지 마라.
 - 배합에 없는 원료의 투입량(kg)을 제시하지 마라.
 - 표나 마크다운 기호, 번호, 제목을 쓰지 마라.
 - 영양소 이름은 입력에 적힌 표기(CP, TDN, ADF 등)를 그대로 쓰고,
@@ -64,7 +66,7 @@ export class ExplanationsService {
 
     return {
       text,
-      model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+      model: process.env.GEMINI_MODEL ?? "gemini-3.6-flash",
       guardrail: { passed: true },
     };
   }
@@ -90,6 +92,11 @@ export class ExplanationsService {
           toKg: a.toKg,
           deltaKg: a.deltaKg,
           note: a.note,
+        })),
+        afterJudgements: payload.afterJudgements?.map((j) => ({
+          nutrient: j.label,
+          value: j.value,
+          status: j.status,
         })),
         limitationNote: payload.limitationNote,
         engineSummary: payload.engineSummary,

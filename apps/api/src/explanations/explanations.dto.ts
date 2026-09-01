@@ -88,6 +88,17 @@ export class CreateExplanationDto {
   @Type(() => CorrectionActionDto)
   actions!: CorrectionActionDto[];
 
+  /**
+   * 조정안을 적용했을 때의 판정. 교정안 설명에서만 온다.
+   * 조정 결과 판정이 바뀌는 항목(예: 적정 → 과잉)을 AI가 정확히 말할 수 있게 하고,
+   * 가드레일도 이 값을 알아야 결과 설명을 판정 번복으로 오판하지 않는다.
+   */
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => NutrientJudgementDto)
+  afterJudgements?: NutrientJudgementDto[];
+
   /** 완전 적정에 도달하지 못한 경우 엔진이 남긴 한계 설명. */
   @IsOptional()
   @IsString()

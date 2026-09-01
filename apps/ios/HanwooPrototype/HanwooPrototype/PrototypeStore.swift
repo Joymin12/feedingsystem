@@ -41,7 +41,10 @@ final class PrototypeStore: ObservableObject {
     @Published var diaryEntries: [DiaryEntry]
     @Published var posts: [CommunityPost]
     @Published var userIngredientDefinitions: [UserIngredientDefinition]
-    @Published var selectedFormulaID: UUID
+    // 대표 배합. 홈과 배합 화면이 기본으로 여는 배합이며, 앱을 껐다 켜도 유지된다.
+    @Published var selectedFormulaID: UUID {
+        didSet { formulaRepository.saveSelectedFormulaID(selectedFormulaID) }
+    }
     @Published var users: [AppUser]
     @Published var currentLoginID: String?
 
@@ -189,7 +192,13 @@ final class PrototypeStore: ObservableObject {
         let savedUserFormulas = formulaRepo.loadFormulas()
         let userFormulas = savedUserFormulas.isEmpty ? [formulaA, formulaB, formulaH] : savedUserFormulas
         self.formulas = userFormulas + [formulaC, formulaD, formulaE, formulaF, formulaG]
-        self.selectedFormulaID = userFormulas.first?.id ?? formulaA.id
+        // 저장된 대표 배합이 아직 목록에 있으면 그대로 이어서 연다.
+        let savedSelection = formulaRepo.loadSelectedFormulaID()
+        if let savedSelection, userFormulas.contains(where: { $0.id == savedSelection }) {
+            self.selectedFormulaID = savedSelection
+        } else {
+            self.selectedFormulaID = userFormulas.first?.id ?? formulaA.id
+        }
 
         // 시작 시 회귀 배합을 자동 실행하던 코드를 제거했다.
         // 실행할 때마다 테스트 배합 5종에 교정 엔진을 돌려 첫 화면이 그만큼 늦어졌다.
@@ -224,6 +233,14 @@ final class PrototypeStore: ObservableObject {
                 savePosts()
             }
             syncSessionFromCurrentUser()
+        }
+
+        // 시드 배합을 한 번 저장해 둔다.
+        // 저장하지 않으면 다음 실행에서 시드가 새 UUID로 다시 만들어져
+        // 대표 배합 선택이나 일지의 배합 참조가 매번 끊긴다.
+        if savedUserFormulas.isEmpty {
+            formulaRepo.saveFormulas(userFormulas)
+            formulaRepo.saveSelectedFormulaID(selectedFormulaID)
         }
 
         dumpRegressionRecommendationsIfNeeded()

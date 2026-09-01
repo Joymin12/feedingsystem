@@ -53,14 +53,12 @@ struct AnalysisDetailView: View {
                             .padding(.top, 28)
                             .padding(.bottom, 12)
 
-                        LazyVGrid(
-                            columns: [GridItem(.adaptive(minimum: 110), spacing: 8)],
-                            alignment: .leading,
-                            spacing: 8
-                        ) {
-                            ForEach(satisfied) { status in
-                                ValueChip(name: status.nutrient, value: status.currentValue)
-                            }
+                        // 확인 필요와 같은 줄 모양으로 적는다.
+                        // 값만 칩으로 늘어놓으면 "적정"이라는 판정이 화면에서 사라진다.
+                        HairlineDivider()
+                        ForEach(satisfied) { status in
+                            nutrientRow(status)
+                            HairlineDivider()
                         }
                     }
 
